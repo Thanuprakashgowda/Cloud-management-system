@@ -1,4 +1,4 @@
-const sql = require("../server.js");
+const sql = require("../database/db.js");
 
 // Create and Save a new Student
 exports.create = (req, res) => {
@@ -19,18 +19,17 @@ exports.create = (req, res) => {
     };
 
     // Save Student in the database
-    sql.query("INSERT INTO students SET ?", student, (err, res) => {
+    sql.query("INSERT INTO students SET ?", student, (err, data) => {
         if (err) {
-            console.log("error: ", err);
+            console.error("DB Error:", err);
             // result(err, null); // If we were using a model class
             res.status(500).send({
                 message: err.message || "Some error occurred while creating the Student."
             });
             return;
         }
-        console.log("created student: ", { id: res.insertId, ...student });
         // result(null, { id: res.insertId, ...student });
-        res.send({ id: res.insertId, ...student });
+        res.send({ id: data.insertId, ...student });
     });
 };
 

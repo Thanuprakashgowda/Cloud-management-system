@@ -15,24 +15,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Serve static files from 'public' directory
 app.use(express.static('public'));
 
-// Database Connection
-const connection = mysql.createConnection({
-    host: dbConfig.HOST,
-    user: dbConfig.USER,
-    password: dbConfig.PASSWORD,
-    database: dbConfig.DB
-});
-
-connection.connect(error => {
-    if (error) {
-        console.error("Successfully connected to the database.");
-        // In a real app, we might want to retry or exit
-        // console.error("Error connecting to the database: ", error);
-        // return;
-    } else {
-        console.log("Successfully connected to the database.");
-    }
-});
+// Database Connection is handled in individual controllers via database/db.js
+// We don't need to require it here for the app to start, but good to check connection once
+require("./database/db.js");
 
 // Routes
 // Simple route for testing
@@ -41,6 +26,9 @@ app.get("/", (req, res) => {
 });
 
 require("./routes/student.routes.js")(app);
+require("./routes/course.routes.js")(app);
+require("./routes/department.routes.js")(app);
+require("./routes/mark.routes.js")(app);
 
 // Start Server
 const PORT = process.env.PORT || 8080;
@@ -48,5 +36,4 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
 
-// Export connection for use in controllers/models
-module.exports = connection;
+// End of file
