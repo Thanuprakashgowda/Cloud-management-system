@@ -417,6 +417,37 @@ body {
     box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
 }
 
+/* Profile Modal */
+.profile-detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.profile-detail-row:last-of-type { border-bottom: none; }
+.profile-detail-row i {
+    font-size: 1rem;
+    margin-top: 2px;
+    width: 20px;
+    flex-shrink: 0;
+}
+.profile-detail-row label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+.profile-detail-row p {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
 /* Table Styles */
 .card-table {
     background-color: var(--card-bg);

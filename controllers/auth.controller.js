@@ -61,3 +61,13 @@ exports.login = (req, res) => {
         res.status(200).send({ auth: true, token: token, school: admin.school_name });
     });
 };
+
+exports.getProfile = (req, res) => {
+    // req.adminId is injected by verifyToken middleware
+    const query = "SELECT school_name, email, created_at FROM administrators WHERE admin_id = ?";
+    sql.query(query, [req.adminId], (err, result) => {
+        if (err) return res.status(500).send({ message: err.message });
+        if (!result.length) return res.status(404).send({ message: "Admin not found" });
+        res.status(200).send(result[0]);
+    });
+};

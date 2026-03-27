@@ -18,7 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
             authContainer.style.display = 'none';
             dashboardContainer.style.display = 'flex';
             document.getElementById('adminSchoolName').textContent = schoolName;
-            
+            document.getElementById('adminDisplayName').textContent = 'Admin';
+
+            // Update avatar with school name initials
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(schoolName)}&background=4f46e5&color=fff&bold=true`;
+            document.getElementById('adminAvatarImg').src = avatarUrl;
+
             // Initial Dashboard Load
             fetchStudents();
             loadStats();
@@ -86,6 +91,44 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('jwt_token');
         localStorage.removeItem('school_name');
         checkAuth();
+    };
+
+    // --- ADMIN PROFILE MODAL ---
+    const adminProfileBtn = document.getElementById('adminProfileBtn');
+    const adminProfileModal = document.getElementById('adminProfileModal');
+
+    adminProfileBtn.onclick = () => {
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(schoolName)}&background=4f46e5&color=fff&bold=true&size=128`;
+        document.getElementById('profileAvatarLarge').src = avatarUrl;
+        document.getElementById('profileSchoolNameHeader').textContent = schoolName;
+        document.getElementById('profileSchoolName').textContent = schoolName;
+
+        // Fetch the admin's registered email & date from server
+        fetchWithAuth('/api/auth/profile')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('profileEmail').textContent = data.email || 'Unavailable';
+                if (data.created_at) {
+                    document.getElementById('profileCreatedAt').textContent =
+                        new Date(data.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+                }
+            })
+            .catch(() => { document.getElementById('profileEmail').textContent = 'Unavailable'; });
+
+        // Pull live counts already shown on the dashboard
+        document.getElementById('profileStudentCount').textContent =
+            document.getElementById('statsStudentCount').textContent + ' Students';
+        document.getElementById('profileCourseCount').textContent =
+            document.getElementById('statsCourseCount').textContent + ' Courses';
+        document.getElementById('profileDeptCount').textContent =
+            document.getElementById('statsDeptCount').textContent + ' Departments';
+
+        adminProfileModal.style.display = 'flex';
+    };
+
+    document.getElementById('logoutFromProfile').onclick = () => {
+        adminProfileModal.style.display = 'none';
+        document.getElementById('logoutBtn').click();
     };
 
 
