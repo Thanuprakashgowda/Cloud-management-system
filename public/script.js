@@ -162,6 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
         'resultsView': document.getElementById('resultsView')
     };
 
+    const mainContent = document.querySelector('.main-content');
+
+    // Page titles for top-bar
+    const pageTitles = {
+        homeView:        'Welcome back, Admin! 👋',
+        studentsView:    'Students',
+        coursesView:     'Courses',
+        departmentsView: 'Departments',
+        resultsView:     'Results'
+    };
+
     // Shared navigation function — used by nav links AND stat cards
     function navigateTo(targetId) {
         links.forEach(l => l.classList.remove('active'));
@@ -172,6 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (views[targetId]) {
             views[targetId].style.display = 'block';
+
+            // Always scroll back to top when switching views
+            if (mainContent) mainContent.scrollTop = 0;
+
+            // Update top-bar greeting to match the current view
+            const topBarTitle = document.querySelector('.top-bar h2');
+            if (topBarTitle && pageTitles[targetId]) topBarTitle.textContent = pageTitles[targetId];
+
             if (targetId === 'studentsView') fetchStudents();
             if (targetId === 'coursesView') fetchCourses();
             if (targetId === 'departmentsView') fetchDepartments();
