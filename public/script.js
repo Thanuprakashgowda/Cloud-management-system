@@ -159,7 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'studentsView': document.getElementById('studentsView'),
         'coursesView': document.getElementById('coursesView'),
         'departmentsView': document.getElementById('departmentsView'),
-        'resultsView': document.getElementById('resultsView')
+        'resultsView':      document.getElementById('resultsView'),
+        'attendanceView':   document.getElementById('attendanceView')
     };
 
     const mainContent = document.querySelector('.main-content');
@@ -170,7 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
         studentsView:    'Students',
         coursesView:     'Courses',
         departmentsView: 'Departments',
-        resultsView:     'Results'
+        resultsView:     'Results',
+        attendanceView:  'Attendance'
     };
 
     // Shared navigation function — used by nav links AND stat cards
@@ -196,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetId === 'departmentsView') fetchDepartments();
             if (targetId === 'resultsView') fetchResults();
             if (targetId === 'homeView') loadStats();
+            if (targetId === 'attendanceView') loadAttendance();
         }
     }
 
@@ -972,6 +975,211 @@ document.addEventListener('DOMContentLoaded', () => {
 
         XLSX.writeFile(wb, `${sheetName}_${Date.now()}.xlsx`);
     };
+
+    // ========== REUSABLE PAGINATION ==========
+    function createPagination(allData, tbodyId, renderRow, paginationBarId, pageSize = 10) {
+        let currentPage = 1;
+        const totalPages = () => Math.ceil(allData.length / pageSize);
+        const tbody = document.getElementById(tbodyId);
+        const bar = document.getElementById(paginationBarId);
+
+        function renderPage(page) {
+            currentPage = Math.min(Math.max(1, page), totalPages() || 1);
+            const start = (currentPage - 1) * pageSize;
+            const slice = allData.slice(start, start + pageSize);
+            tbody.innerHTML = slice.map((item, i) => renderRow(item, start + i)).join('');
+
+            if (!bar) return;
+            if (allData.length <= pageSize) { bar.innerHTML = ''; return; }
+
+            const from = start + 1, to = Math.min(start + pageSize, allData.length);
+            bar.innerHTML = `
+                <div class="pg-info">${from}–${to} of ${allData.length}</div>
+                <div class="pg-controls">
+                    <button class="pg-btn" onclick="(${renderPage})(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    ${Array.from({length: totalPages()}, (_, i) => `
+                        <button class="pg-btn ${i+1 === currentPage ? 'pg-active' : ''}" onclick="(${renderPage})(${i+1})">${i+1}</button>
+                    `).join('')}
+                    <button class="pg-btn" onclick="(${renderPage})(${currentPage + 1})" ${currentPage === totalPages() ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>`;
+        }
+
+        renderPage(1);
+    }
+
+    // ========== ATTENDANCE MODULE ==========
+    const views_att = {
+        attendanceDatePicker: document.getElementById('attendanceDatePicker'),
+        attendanceTableBody: document.getElementById('attendanceTableBody'),
+        attendanceSummary: document.getElementById('attendanceSummary'),
+        saveAttendanceBtn: document.getElementById('saveAttendanceBtn'),
+    };
+
+    // Set date picker default to today
+    if (views_att.attendanceDatePicker) {
+        views_att.attendanceDatePicker.value = new Date().toISOString().slice(0, 10);
+        views_att.attendanceDatePicker.addEventListener('change', () => loadAttendance());
+    }
+
+    function loadAttendance() {
+        if (!token) return;
+        const date = views_att.attendanceDatePicker?.value || new Date().toISOString().slice(0, 10);
+        fetchWithAuth(`/api/attendance?date=${date}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data)) return;
+                const tbody = document.getElementById('attendanceTableBody');
+                if (!tbody) return;
+
+                tbody.innerHTML = data.map((s, i) => {
+                    const status = s.status || 'present';
+                    return `<tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${s.student_name}</strong></td>
+                        <td>${s.department_name || '—'}</td>
+                        <td style="text-align:center;">
+                            <div style="display:inline-flex;gap:6px;background:var(--bg-secondary);border-radius:20px;padding:3px 6px;border:1px solid var(--border);">
+                                <label style="cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                    <input type="radio" name="att_${s.student_id}" value="present" ${status==='present'?'checked':''} style="accent-color:#10b981;"> 
+                                    <span style="font-size:0.78rem;color:#10b981;font-weight:600;">P</span>
+                                </label>
+                                <label style="cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                    <input type="radio" name="att_${s.student_id}" value="absent" ${status==='absent'?'checked':''} style="accent-color:#ef4444;">
+                                    <span style="font-size:0.78rem;color:#ef4444;font-weight:600;">A</span>
+                                </label>
+                                <label style="cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                    <input type="radio" name="att_${s.student_id}" value="late" ${status==='late'?'checked':''} style="accent-color:#f59e0b;">
+                                    <span style="font-size:0.78rem;color:#f59e0b;font-weight:600;">L</span>
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge ${status==='present'?'badge-success':status==='absent'?'badge-danger':'badge-warning'}" id="att_status_${s.student_id}">
+                                ${status.charAt(0).toUpperCase()+status.slice(1)}
+                            </span>
+                        </td>
+                    </tr>`;
+                }).join('');
+
+                // Update status badge live on radio change
+                data.forEach(s => {
+                    document.querySelectorAll(`input[name="att_${s.student_id}"]`).forEach(radio => {
+                        radio.addEventListener('change', function() {
+                            const badge = document.getElementById(`att_status_${s.student_id}`);
+                            if (badge) {
+                                badge.className = `badge ${this.value==='present'?'badge-success':this.value==='absent'?'badge-danger':'badge-warning'}`;
+                                badge.textContent = this.value.charAt(0).toUpperCase()+this.value.slice(1);
+                            }
+                        });
+                    });
+                });
+
+                renderAttendanceSummary(data);
+            }).catch(err => console.error('Attendance load error:', err));
+
+        loadAttendanceHistory();
+    }
+
+    function renderAttendanceSummary(data) {
+        const summary = document.getElementById('attendanceSummary');
+        if (!summary) return;
+        const present = data.filter(s => (s.status || 'present') === 'present').length;
+        const absent  = data.filter(s => s.status === 'absent').length;
+        const late    = data.filter(s => s.status === 'late').length;
+        const total   = data.length;
+        summary.innerHTML = `
+            <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-check-circle" style="color:#10b981;font-size:1.3rem;"></i>
+                <div><div style="font-size:1.4rem;font-weight:800;color:#10b981;">${present}</div><div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Present</div></div>
+            </div>
+            <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-times-circle" style="color:#ef4444;font-size:1.3rem;"></i>
+                <div><div style="font-size:1.4rem;font-weight:800;color:#ef4444;">${absent}</div><div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Absent</div></div>
+            </div>
+            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-clock" style="color:#f59e0b;font-size:1.3rem;"></i>
+                <div><div style="font-size:1.4rem;font-weight:800;color:#f59e0b;">${late}</div><div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Late</div></div>
+            </div>
+            <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:0.75rem 1.25rem;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-users" style="color:var(--primary);font-size:1.3rem;"></i>
+                <div><div style="font-size:1.4rem;font-weight:800;color:var(--primary);">${total > 0 ? Math.round(present/total*100) : 0}%</div><div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;">Attendance Rate</div></div>
+            </div>`;
+    }
+
+    function loadAttendanceHistory() {
+        if (!token) return;
+        fetchWithAuth('/api/attendance/history')
+            .then(r => r.json())
+            .then(data => {
+                if (!Array.isArray(data)) return;
+                createPagination(data, 'attendanceHistoryBody', (row) => {
+                    const color = row.status === 'present' ? '#10b981' : row.status === 'absent' ? '#ef4444' : '#f59e0b';
+                    return `<tr>
+                        <td><strong>${row.student_name}</strong></td>
+                        <td>${new Date(row.date).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'})}</td>
+                        <td><span class="badge" style="background:${color}20;color:${color};border:1px solid ${color}40;">${row.status.charAt(0).toUpperCase()+row.status.slice(1)}</span></td>
+                    </tr>`;
+                }, 'attendanceHistoryPagination', 15);
+            });
+    }
+
+    if (views_att.saveAttendanceBtn) {
+        views_att.saveAttendanceBtn.onclick = () => {
+            const date = views_att.attendanceDatePicker?.value;
+            if (!date) return alert('Please select a date.');
+            const rows = document.querySelectorAll('#attendanceTableBody tr');
+            const records = [];
+            rows.forEach(row => {
+                const radio = row.querySelector('input[type="radio"]:checked');
+                if (radio) {
+                    const name = radio.name; // att_<id>
+                    const student_id = parseInt(name.replace('att_', ''));
+                    records.push({ student_id, status: radio.value });
+                }
+            });
+            if (!records.length) return alert('No students to save.');
+            views_att.saveAttendanceBtn.disabled = true;
+            views_att.saveAttendanceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            fetchWithAuth('/api/attendance', {
+                method: 'POST',
+                body: JSON.stringify({ date, records })
+            }).then(r => r.json()).then(res => {
+                alert(res.message || 'Saved!');
+                loadAttendanceHistory();
+            }).catch(() => alert('Error saving attendance.'))
+              .finally(() => {
+                views_att.saveAttendanceBtn.disabled = false;
+                views_att.saveAttendanceBtn.innerHTML = '<i class="fas fa-save"></i> Save Attendance';
+            });
+        };
+    }
+
+    window.exportAttendanceExcel = () => {
+        if (!window.XLSX) return alert('Excel library not loaded.');
+        const date = views_att.attendanceDatePicker?.value || 'attendance';
+        const rows = [...document.querySelectorAll('#attendanceTableBody tr')].map(tr =>
+            [...tr.querySelectorAll('td')].map(td => td.textContent.trim())
+        );
+        const ws = XLSX.utils.aoa_to_sheet([['#','Student','Department','Status (P/A/L)','Status'], ...rows]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, `Attendance_${date}`);
+        ws['!cols'] = [5,25,25,15,12].map(wch => ({wch}));
+        XLSX.writeFile(wb, `Attendance_${date}.xlsx`);
+    };
+
+    // Wire attendance to navigateTo
+    const origNavigateTo = window._navigateTo;
+    const attViews = document.getElementById('attendanceView');
+    if (attViews) {
+        document.querySelector('.nav-item[data-target="attendanceView"]')?.addEventListener('click', e => {
+            e.preventDefault();
+            // navigateTo is already bound above via the links loop
+        });
+    }
 
     // Initial Execution
     checkAuth();

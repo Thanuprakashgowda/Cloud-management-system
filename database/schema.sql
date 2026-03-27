@@ -65,3 +65,15 @@ CREATE TABLE IF NOT EXISTS administrators (
 CREATE INDEX idx_student_email ON students(email);
 CREATE INDEX idx_course_name ON courses(course_name);
 CREATE INDEX idx_admin_email ON administrators(email);
+
+-- 7. Attendance Table
+CREATE TABLE IF NOT EXISTS attendance (
+    attendance_id INT PRIMARY KEY AUTO_INCREMENT,
+    student_id INT NOT NULL,
+    date DATE NOT NULL,
+    status ENUM('present', 'absent', 'late') NOT NULL DEFAULT 'present',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_attendance (student_id, date),
+    INDEX idx_attendance_date (date)
+);

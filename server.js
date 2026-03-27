@@ -49,6 +49,8 @@ require("./routes/stats.routes.js")(app);
 app.use('/api/ai', verifyToken);
 require("./routes/ai.routes.js")(app);
 
+app.use('/api/attendance', require("./routes/attendance.routes.js"));
+
 // Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

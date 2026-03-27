@@ -77,6 +77,9 @@
                 <a href="#" class="nav-item" data-target="resultsView">
                     <div class="nav-icon"><i class="fas fa-poll"></i></div> Results
                 </a>
+                <a href="#" class="nav-item" data-target="attendanceView">
+                    <div class="nav-icon"><i class="fas fa-calendar-check"></i></div> Attendance
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <button class="user-info" id="adminProfileBtn" title="View School Profile">
@@ -285,7 +288,65 @@
                         <tbody id="resultsTableBody"></tbody>
                     </table>
                 </div>
+                <div id="resultsPagination" class="pagination-bar"></div>
             </div>
+
+            <!-- ====== ATTENDANCE VIEW ====== -->
+            <div id="attendanceView" class="view-section" style="display: none;">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Attendance</h1>
+                        <p>Track daily student attendance</p>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="date" id="attendanceDatePicker" class="form-control" style="max-width:180px;">
+                        <button class="btn btn-primary" id="saveAttendanceBtn"><i class="fas fa-save"></i> Save Attendance</button>
+                        <button class="btn btn-success" onclick="exportAttendanceExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+                    </div>
+                </div>
+
+                <!-- Attendance Summary Cards -->
+                <div id="attendanceSummary" style="display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap;"></div>
+
+                <!-- Attendance Table -->
+                <div class="card-table">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Student Name</th>
+                                <th>Department</th>
+                                <th style="text-align:center;">
+                                    <span style="color:#10b981;margin-right:8px;"><i class="fas fa-circle"></i> Present</span>
+                                    <span style="color:#ef4444;margin-right:8px;"><i class="fas fa-circle"></i> Absent</span>
+                                    <span style="color:#f59e0b;"><i class="fas fa-circle"></i> Late</span>
+                                </th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Attendance History -->
+                <div style="margin-top:2rem;">
+                    <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin-bottom:1rem;">Attendance History (Last 30 Days)</h3>
+                    <div class="card-table">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceHistoryBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="attendanceHistoryPagination" class="pagination-bar"></div>
+                </div>
+            </div>
+
             </div><!-- end page-area -->
 
             <!-- Credit Footer -->
