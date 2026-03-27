@@ -29,11 +29,13 @@ require("./routes/student.routes.js")(app);
 require("./routes/course.routes.js")(app);
 require("./routes/department.routes.js")(app);
 require("./routes/mark.routes.js")(app);
+require("./routes/stats.routes.js")(app);
 
 // Start Server
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
 
-// End of file
+// Export app for Vercel Serverless Functions
+module.exports = app;

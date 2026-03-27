@@ -49,7 +49,7 @@ You can use a local MySQL server or AWS RDS.
 ```bash
 node server.js
 ```
-Access the frontend at `http://localhost:8080`.
+Access the frontend at `http://localhost:3000`.
 
 ## 📚 Documentation
 -   [AWS RDS Setup Guide](docs/AWS_RDS_SETUP.md)

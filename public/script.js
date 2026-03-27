@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Theme Toggle
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const body = document.body;
+    let isDarkMode = localStorage.getItem('theme') === 'dark';
+
+    if (isDarkMode) body.setAttribute('data-theme', 'dark');
+
+    themeToggleBtn.addEventListener('click', () => {
+        isDarkMode = !isDarkMode;
+        if (isDarkMode) {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            body.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        }
+        // Repaint charts if they exist so labels match theme
+        if (window.deptChartInstance) window.deptChartInstance.update();
+        if (window.perfChartInstance) window.perfChartInstance.update();
+    });
+
     // Navigation
     const links = document.querySelectorAll('.nav-item');
     const views = {
@@ -37,12 +58,79 @@ document.addEventListener('DOMContentLoaded', () => {
         Promise.all([
             fetch('/api/students').then(r => r.json()).catch(() => []),
             fetch('/api/courses').then(r => r.json()).catch(() => []),
-            fetch('/api/departments').then(r => r.json()).catch(() => [])
-        ]).then(([students, courses, depts]) => {
+            fetch('/api/departments').then(r => r.json()).catch(() => []),
+            fetch('/api/stats').then(r => r.json()).catch(() => null)
+        ]).then(([students, courses, depts, stats]) => {
             document.getElementById('statsStudentCount').textContent = students.length || 0;
             document.getElementById('statsCourseCount').textContent = courses.length || 0;
             document.getElementById('statsDeptCount').textContent = depts.length || 0;
+
+            if (stats && window.Chart) {
+                renderCharts(stats);
+            }
         });
+    }
+
+    function renderCharts(stats) {
+        const getThemeColor = () => document.body.getAttribute('data-theme') === 'dark' ? '#f8fafc' : '#1f2937';
+        
+        // Department Enrollment Chart (Doughnut)
+        const deptCtx = document.getElementById('deptChart');
+        if (window.deptChartInstance) window.deptChartInstance.destroy();
+        
+        if (stats.departmentDistribution) {
+            const labels = stats.departmentDistribution.map(d => d.department_name);
+            const data = stats.departmentDistribution.map(d => d.student_count);
+            window.deptChartInstance = new Chart(deptCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { color: getThemeColor } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // Course Performance Average Chart (Bar)
+        const perfCtx = document.getElementById('perfChart');
+        if (window.perfChartInstance) window.perfChartInstance.destroy();
+        
+        if (stats.coursePerformance) {
+            const courseLabels = stats.coursePerformance.map(c => c.course_name);
+            const courseData = stats.coursePerformance.map(c => c.average_marks);
+            window.perfChartInstance = new Chart(perfCtx, {
+                type: 'bar',
+                data: {
+                    labels: courseLabels,
+                    datasets: [{
+                        label: 'Average Marks',
+                        data: courseData,
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { ticks: { color: getThemeColor } },
+                        y: { ticks: { color: getThemeColor }, beginAtZero: true, max: 100 }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
     }
 
     // Call loadStats initially
@@ -56,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const studentSelect = document.getElementById('studentDeptId');
                 const courseSelect = document.getElementById('courseDeptId');
 
-                // Clear existing options (keep the first 'Select' option)
                 studentSelect.innerHTML = '<option value="">Select Department...</option>';
                 courseSelect.innerHTML = '<option value="">Select Department...</option>';
 
@@ -66,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     courseSelect.innerHTML += option;
                 });
             })
-            .catch(err => console.error('Error loading departments for dropdowns:', err));
+            .catch(err => console.error('Error loading departments:', err));
     }
 
     // --- STUDENTS LOGIC ---
@@ -178,6 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- RESULTS LOGIC ---
     const resultsTableBody = document.getElementById('resultsTableBody');
 
+    function getAIInsight(marks) {
+        if (marks === null || marks === undefined) return '<span class="ai-badge risk">No Data</span>';
+        if (marks >= 85) return '<span class="ai-badge excellent"><i class="fas fa-star"></i> Excelling</span>';
+        if (marks >= 60) return '<span class="ai-badge good"><i class="fas fa-check"></i> On Track</span>';
+        return '<span class="ai-badge risk"><i class="fas fa-exclamation-triangle"></i> At Risk</span>';
+    }
+
     function fetchResults() {
         fetch('/api/marks')
             .then(res => res.json())
@@ -189,8 +283,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td>${r.first_name} ${r.last_name}</td>
                             <td>${r.course_name}</td>
                             <td>${r.department_name || '-'}</td>
-                            <td><span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-weight: 500;">${r.grade}</span></td>
+                            <td><span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 8px; border-radius: 4px; font-weight: 500;">${r.grade}</span></td>
                             <td>${r.marks || 'N/A'}</td>
+                            <td>${getAIInsight(r.marks)}</td>
                         </tr>
                     `;
                 });
@@ -213,24 +308,24 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(() => {
                 modal.style.display = "none";
                 refreshCallback();
+                if (endpoint === 'departments') populateDepartmentDropdowns();
             })
             .catch(err => alert('Error creating item: ' + err));
     }
 
-    // Global delete function
     window.deleteItem = (endpoint, id, refreshCallback) => {
         if (confirm('Are you sure?')) {
             fetch(`/api/${endpoint}/${id}`, { method: 'DELETE' })
                 .then(() => {
-                    // If specific callback provided, use it. Else default to students (legacy support or hot fix)
                     if (refreshCallback) refreshCallback();
                     else fetchStudents();
+                    
+                    if (endpoint === 'departments') populateDepartmentDropdowns();
                 })
                 .catch(err => alert('Error deleting: ' + err));
         }
     };
 
-    // Close Modals
     document.querySelectorAll('.close-modal').forEach(btn => {
         btn.onclick = () => {
             const modalId = btn.getAttribute('data-modal');
