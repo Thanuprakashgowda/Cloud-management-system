@@ -422,6 +422,11 @@ body {
 }
 .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
 .stat-card:hover::before { opacity: 1; }
+.stat-card:hover .stat-info h3::after {
+    content: ' →';
+    color: var(--primary);
+    font-weight: 700;
+}
 
 .stat-icon-wrap {
     width: 52px; height: 52px;

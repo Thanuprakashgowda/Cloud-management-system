@@ -162,24 +162,47 @@ document.addEventListener('DOMContentLoaded', () => {
         'resultsView': document.getElementById('resultsView')
     };
 
+    // Shared navigation function — used by nav links AND stat cards
+    function navigateTo(targetId) {
+        links.forEach(l => l.classList.remove('active'));
+        Object.values(views).forEach(view => view.style.display = 'none');
+
+        const targetLink = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+        if (targetLink) targetLink.classList.add('active');
+
+        if (views[targetId]) {
+            views[targetId].style.display = 'block';
+            if (targetId === 'studentsView') fetchStudents();
+            if (targetId === 'coursesView') fetchCourses();
+            if (targetId === 'departmentsView') fetchDepartments();
+            if (targetId === 'resultsView') fetchResults();
+            if (targetId === 'homeView') loadStats();
+        }
+    }
+
     links.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            links.forEach(l => l.classList.remove('active'));
-            Object.values(views).forEach(view => view.style.display = 'none');
-
-            link.classList.add('active');
-            const targetId = link.getAttribute('data-target');
-            if (views[targetId]) {
-                views[targetId].style.display = 'block';
-                if (targetId === 'studentsView') fetchStudents();
-                if (targetId === 'coursesView') fetchCourses();
-                if (targetId === 'departmentsView') fetchDepartments();
-                if (targetId === 'resultsView') fetchResults();
-                if (targetId === 'homeView') loadStats();
-            }
+            navigateTo(link.getAttribute('data-target'));
         });
     });
+
+    // --- Make Stat Cards clickable ---
+    // Run after DOM is ready (stat cards exist at this point)
+    const statCardMap = [
+        { id: 'statsStudentCount', target: 'studentsView' },
+        { id: 'statsCourseCount',  target: 'coursesView'  },
+        { id: 'statsDeptCount',    target: 'departmentsView' }
+    ];
+    statCardMap.forEach(({ id, target }) => {
+        const card = document.getElementById(id)?.closest('.stat-card');
+        if (card) {
+            card.style.cursor = 'pointer';
+            card.title = `Click to view ${target.replace('View', '')}`;
+            card.addEventListener('click', () => navigateTo(target));
+        }
+    });
+
 
     // --- FETCH WRAPPER WITH AUTH ---
     function fetchWithAuth(url, options = {}) {
