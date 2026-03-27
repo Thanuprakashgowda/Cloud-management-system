@@ -210,7 +210,7 @@
             <!-- Courses View -->
             <div id="coursesView" class="view-section" style="display: none;">
                 <div class="section-header">
-                    <div>
+                    <div class="section-title">
                         <h1>Courses</h1>
                         <p>Manage academic curriculum</p>
                     </div>
@@ -235,7 +235,7 @@
             <!-- Departments View -->
             <div id="departmentsView" class="view-section" style="display: none;">
                 <div class="section-header">
-                    <div>
+                    <div class="section-title">
                         <h1>Departments</h1>
                         <p>Manage university departments</p>
                     </div>
@@ -259,13 +259,13 @@
             <!-- Results View -->
             <div id="resultsView" class="view-section" style="display: none;">
                 <div class="section-header">
-                    <div>
+                    <div class="section-title">
                         <h1>Student Results</h1>
                         <p>View grades and marks</p>
                     </div>
                     <div style="display:flex; gap:10px; align-items:center;">
                         <button class="btn btn-primary" id="addResultBtn"><i class="fas fa-plus"></i> Add Result</button>
-                        <button class="btn btn-primary" style="background:#10b981" onclick="exportToExcel('resultsTableBody', 'Academic_Results')"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button class="btn btn-success" onclick="exportToExcel('resultsTableBody', 'Academic_Results')"><i class="fas fa-file-excel"></i> Excel</button>
                         <button class="btn btn-danger" onclick="exportToPDF('resultsTableBody', 'Academic Results')"><i class="fas fa-file-pdf"></i> PDF</button>
                     </div>
                 </div>
@@ -286,6 +286,18 @@
                     </table>
                 </div>
             </div>
+            </div><!-- end page-area -->
+
+            <!-- Credit Footer -->
+            <footer class="credit-footer">
+                <span>Built with <i class="fas fa-heart" style="color:#ef4444;"></i> by</span>
+                <a href="https://www.linkedin.com/in/thanuprakash-gowda" target="_blank" rel="noopener" class="credit-link">
+                    <i class="fab fa-linkedin"></i> Thanuprakash Gowda
+                </a>
+                <span class="credit-divider">·</span>
+                <span style="color:var(--text-muted);">Cloud SMS © 2026</span>
+            </footer>
+
         </main>
     </div>
 

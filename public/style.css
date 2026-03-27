@@ -541,6 +541,11 @@ body {
 /* ============================================================
    TABLE
    ============================================================ */
+.view-section {
+    /* Ensure consistent top alignment */
+    padding-top: 0;
+    width: 100%;
+}
 .card-table {
     background: var(--surface);
     backdrop-filter: var(--blur);
@@ -856,3 +861,45 @@ body {
     padding: 4px;
 }
 .theme-toggle-btn:hover { color: var(--primary); }
+
+/* ============================================================
+   CREDIT FOOTER
+   ============================================================ */
+.credit-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 1rem 2rem;
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    background: var(--surface);
+    backdrop-filter: var(--blur);
+    flex-wrap: wrap;
+}
+.credit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #0a66c2;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(10,102,194,0.08);
+    border: 1px solid rgba(10,102,194,0.2);
+    transition: all 0.2s ease;
+}
+.credit-link:hover {
+    background: #0a66c2;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(10,102,194,0.3);
+}
+.credit-divider {
+    color: var(--text-muted);
+    font-size: 1rem;
+}

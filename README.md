@@ -11,7 +11,7 @@
 **A premium, enterprise-grade school management platform powered by Google Gemini AI.**  
 Manage students, courses, departments, and academic results — all from a stunning glassmorphism dashboard.
 
-[🚀 Live Demo](https://cloud-management-system-hazel.vercel.app) • [📂 GitHub Repo](https://github.com/Thanuprakashgowda/Cloud-management-system)
+[🚀 Live Demo](https://cloud-management-system-black.vercel.app) • [📂 GitHub Repo](https://github.com/Thanuprakashgowda/Cloud-management-system)
 
 </div>
 
@@ -89,7 +89,7 @@ Manage students, courses, departments, and academic results — all from a stunn
 
 | Environment | URL |
 |---|---|
-| **Production** | [https://cloud-management-system-hazel.vercel.app](https://cloud-management-system-hazel.vercel.app) |
+| **Production** | [https://cloud-management-system-black.vercel.app](https://cloud-management-system-black.vercel.app) |
 | **Repository** | [https://github.com/Thanuprakashgowda/Cloud-management-system](https://github.com/Thanuprakashgowda/Cloud-management-system) |
 
 ---
@@ -227,5 +227,9 @@ MIT License © 2026 [Thanuprakash Gowda](https://github.com/Thanuprakashgowda)
 ---
 
 <div align="center">
-Built with ❤️ using Node.js, Gemini AI, and TiDB Cloud
+
+Built with ❤️ by **[Thanuprakash Gowda](https://www.linkedin.com/in/thanuprakash-gowda)** · [GitHub](https://github.com/Thanuprakashgowda) · [LinkedIn](https://www.linkedin.com/in/thanuprakash-gowda)
+
+![LinkedIn](https://img.shields.io/badge/LinkedIn-Thanuprakash%20Gowda-0A66C2?style=flat-square&logo=linkedin&logoColor=white)
+
 </div>
