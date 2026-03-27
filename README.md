@@ -1,235 +1,91 @@
-# ☁ Cloud SMS — AI-Powered School Management System
+# 🌐 Cloud Management System (CloudSMS)
 
-<div align="center">
+### 🚀 Smart, Automated & Scalable Institution Management
+Cloud Management System (CloudSMS) is a premium, enterprise-grade platform designed for schools, colleges, and universities to manage their academic data with ease. Built with a modern tech stack (Node.js, TiDB Cloud, and Google Gemini AI), it offers a stunning UI and powerful automation tools.
 
-![Cloud SMS Banner](https://img.shields.io/badge/Cloud%20SMS-Enterprise%20Edition-6366f1?style=for-the-badge&logo=cloud&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-TiDB%20Cloud-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
-![Gemini AI](https://img.shields.io/badge/AI-Gemini%201.5-8B5CF6?style=for-the-badge&logo=google&logoColor=white)
-![Vercel](https://img.shields.io/badge/Deployed-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
-
-**A premium, enterprise-grade school management platform powered by Google Gemini AI.**  
-Manage students, courses, departments, and academic results — all from a stunning glassmorphism dashboard.
-
-[🚀 Live Demo](https://cloud-management-system-black.vercel.app) • [📂 GitHub Repo](https://github.com/Thanuprakashgowda/Cloud-management-system)
-
-</div>
+**Live Demo:** [https://cloud-management-system-black.vercel.app/](https://cloud-management-system-black.vercel.app/)
 
 ---
 
-## ✨ Features
+## ✨ Key Features
+
+### 🏢 Core Management
+- **Student Management:** Full CRUD operations for student profiles, department assignments, and biodata.
+- **Course Management:** Manage academic courses, credit hours, and department links.
+- **Department Management:** Track various departments and their heads of department (HOD).
+- **Academic Results:** Manage student enrollments, assign grades, and record marks. Features **live result editing** for corrections.
+
+### 📅 Advanced Attendance System
+- **Daily Entry:** Simple interface for marking students as *Present*, *Absent*, or *Late*.
+- **Summary Dashboard:** Real-time calculation of Present/Absent counts and Attendance Rate %.
+- **30-Day History:** Visual history log with paginated records for historical tracking.
+- **Excel Export:** Export daily attendance sheets to `.xlsx` for offline reporting.
 
 ### 🤖 AI-Powered Intelligence
-| Feature | Description |
-|---|---|
-| **CloudBot Chatbot** | Floating AI assistant that answers natural language questions about live school data (e.g. *"How many students do we have?"*) |
-| **Executive Dashboard Report** | One-click AI-generated operational summary of the school's performance metrics |
-| **Student Action Planner** | Per-student AI strategy generator — click "Ask AI" on any result row to get a 3-point personalized academic improvement plan |
+- **AI Action Plans:** One-click personalized academic strategies for students based on their grades and marks, powered by **Google Gemini AI**.
+- **CloudBot Assistant:** A smart, context-aware chatbot that understands the database schema. Ask questions like *"Who is the top performing student?"* or *"How many students are in the CS department?"* to get instant answers.
 
-### 📊 Dashboard & Analytics
-- **Live stat cards** for Total Students, Active Courses, and Departments — clickable to navigate to the relevant section
-- **Enrollment Distribution Doughnut Chart** — color-coded by department with animated center label showing total students, percentage tooltips
-- **Course Performance Bar Chart** — score-based color coding (🟢 Excellent ≥75, 🟡 Average 50-74, 🔴 Needs Improvement <50), staggered animation, dual-layer glow bars
-- **Dark / Light Mode** with smooth transitions and deep space aurora gradient backgrounds
+### 🔒 Enterprise Security & Isolation
+- **Multi-tenant Architecture:** Secure login and registration. Each administrator manages their own data; students, courses, and results are isolated per account using `admin_id` filtering.
+- **Institution Branding:** Support for multiple institution types (Schools, Colleges, Universities, Academies).
 
-### 🎓 Student Management
-- Add, view, and delete student records
-- Fields: Name, Email, Date of Birth, Department assignment
-- Export to **branded PDF** (landscape, school header, summary row, striped rows, page footer) or **Excel (.xlsx)**
-
-### 📚 Course Management
-- Add and delete courses with credit hours and department linkage
-- Export to PDF / Excel
-
-### 🏫 Department Management
-- Add and delete departments with Head of Department
-- Automatically populates student and course dropdowns on change
-
-### 📝 Academic Results
-- **Add Result** — Select student + course from live dropdowns, choose grade (A+ → F), enter marks (0-100)
-- View all results with AI Insight buttons per row
-- Delete results (auto-removes linked enrollment records)
-- Export to PDF / Excel with AI insight column included
-
-### 👤 Admin Profile System
-- Clickable admin panel in sidebar showing:
-  - School name & avatar with institution initials
-  - Registered email and account creation date (fetched from DB)
-  - Live counts: total students, courses, departments
-  - Sign out button
-
-### 📄 PDF Export (Enterprise Quality)
-- A4 Landscape orientation
-- Deep purple branded header with school name and export timestamp
-- Summary statistics row (students / courses / departments)
-- Alternating row shading, Inter font, rounded styles
-- Page number footer on every page
-- AI Insight column cleanly rendered as text (no HTML artifacts)
+### 🖥️ Premium User Experience
+- **Aurora UI Design:** A stunning "Deep Space" theme featuring Glassmorphism, smooth animations, and a sleek split-screen login.
+- **Dark Mode Support:** Toggle between professional light and premium dark themes with persistent storage.
+- **Pagination:** Efficient data handling with reusable pagination for large datasets.
+- **Export Tools:** Save any table as a professional PDF report or Excel spreadsheet.
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | Vanilla HTML5, CSS3, JavaScript (ES2022+) |
-| **Design** | Custom CSS Design System — Deep Space Dark + Aurora Accents |
-| **Charts** | Chart.js 4 |
-| **AI** | Google Gemini 1.5 Flash (`@google/genai`) |
-| **Backend** | Node.js + Express.js |
-| **Database** | MySQL (TiDB Cloud Serverless) |
-| **Auth** | JWT (`jsonwebtoken`) + bcrypt password hashing |
-| **PDF Export** | jsPDF + jsPDF-AutoTable |
-| **Excel Export** | SheetJS (XLSX) |
-| **Deployment** | Vercel (Serverless Functions) |
+- **Frontend:** HTML5, CSS3 (Vanilla + Glassmorphism), JavaScript (ES6+)
+- **Backend:** Node.js, Express.js (RESTful API)
+- **Database:** [TiDB Cloud](https://pingcap.com/tidb-cloud) (Serverless Distributed SQL with MySQL compatibility)
+- **AI Integration:** Google Gemini 1.5 Flash (via Google Generative AI SDK)
+- **Authentication:** JWT (JSON Web Tokens) with Bcrypt password hashing
+- **Deployment:** Vercel (Frontend & Serverless Functions)
 
 ---
 
-## 🚀 Live Deployment
+## 🚀 Local Setup
 
-| Environment | URL |
-|---|---|
-| **Production** | [https://cloud-management-system-black.vercel.app](https://cloud-management-system-black.vercel.app) |
-| **Repository** | [https://github.com/Thanuprakashgowda/Cloud-management-system](https://github.com/Thanuprakashgowda/Cloud-management-system) |
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/Thanuprakashgowda/Cloud-management-system.git
+   ```
 
----
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-## ⚙️ Local Setup
+3. **Environment Variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   DB_HOST=your_tidb_host
+   DB_PORT=your_tidb_port
+   DB_USER=your_tidb_user
+   DB_PASSWORD=your_tidb_password
+   DB_NAME=student_management_system
+   JWT_SECRET=your_jwt_secret
+   GEMINI_API_KEY=your_gemini_api_key
+   ```
 
-### Prerequisites
-- Node.js 18+
-- MySQL database (local or [TiDB Cloud](https://tidbcloud.com) Serverless)
-- Google Gemini API Key → [Get one here](https://aistudio.google.com/app/apikey)
+4. **Run the Migrations:**
+   Ensure the tables are created in your TiDB cluster using the `database/schema.sql`.
 
-### Installation
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/Thanuprakashgowda/Cloud-management-system.git
-cd Cloud-management-system
-
-# 2. Install dependencies
-npm install
-
-# 3. Set up environment variables
-cp .env.example .env
-# Edit .env with your credentials (see below)
-
-# 4. Set up the database
-# Run database/schema.sql on your MySQL server
-
-# 5. Start the server
-node server.js
-# → Open http://localhost:3000
-```
-
-### Environment Variables (`.env`)
-
-```env
-DB_HOST=your-tidb-or-mysql-host
-DB_PORT=4000
-DB_USER=your-db-username
-DB_PASSWORD=your-db-password
-DB_NAME=cloud_sms
-
-JWT_SECRET=your-super-secret-jwt-key-min-32-chars
-
-GEMINI_API_KEY=your-google-gemini-api-key
-```
-
-### Vercel Deployment
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
-
-# Set environment variables in Vercel Dashboard:
-# → Settings → Environment Variables
-# Add all keys from .env above
-```
+5. **Start the Server:**
+   ```bash
+   node server.js
+   ```
 
 ---
 
-## 🗄 Database Schema
+## 👨‍💻 Developer
+Developed with ❤️ by **Thanuprakash Gowda**.
 
-```sql
-administrators  -- Multi-school auth (email, password_hash, school_name)
-students        -- Student records (name, email, dob, department_id)
-departments     -- Department catalogue (name, head_of_dept)
-courses         -- Course catalogue (name, credits, department_id)
-enrollments     -- Student ↔ Course link (student_id, course_id, grade)
-marks           -- Marks per enrollment (enrollment_id, marks)
-```
-
-Import the full schema:
-```bash
-mysql -u root -p cloud_sms < database/schema.sql
-```
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-blue?logo=linkedin)](https://www.linkedin.com/in/thanuprakash-gowda/)
 
 ---
-
-## 📁 Project Structure
-
-```
-Cloud-management-system/
-├── public/
-│   ├── index.html          # SPA frontend
-│   ├── style.css           # Full design system (Deep Space theme)
-│   └── script.js           # All frontend logic + API calls
-├── controllers/
-│   ├── auth.controller.js  # Register / Login / Profile
-│   ├── student.controller.js
-│   ├── course.controller.js
-│   ├── department.controller.js
-│   ├── mark.controller.js  # Results CRUD
-│   ├── stats.controller.js # Dashboard analytics queries
-│   └── ai.controller.js    # Gemini AI endpoints
-├── routes/                 # Express route definitions
-├── middleware/
-│   └── verifyToken.js      # JWT auth middleware
-├── database/
-│   ├── db.js               # MySQL connection pool + SSL
-│   └── schema.sql          # Full DB schema
-├── config/
-│   └── db.config.js        # DB configuration
-├── server.js               # Express app entry point
-└── vercel.json             # Vercel serverless config
-```
-
----
-
-## 🔐 Security
-
-- All API routes (except `/api/auth/login` and `/api/auth/register`) are protected by **JWT Bearer Token** middleware
-- Passwords are hashed with **bcrypt** (10 salt rounds)
-- SSL encryption is **automatically enabled** for cloud database connections (TiDB)
-- Connection **pooling** prevents serverless timeout issues on Vercel
-
----
-
-## 🌟 Screenshots
-
-> **Dashboard** — Live stats, AI Executive Report, Enrollment Doughnut, Course Performance Bar Chart  
-> **Students** — Full CRUD table with PDF/Excel export  
-> **Results** — Add results with grade + marks, AI "Ask AI" per student  
-> **CloudBot** — Floating AI chatbot in bottom-right corner  
-> **Admin Profile** — Click the sidebar user panel for school details  
-
----
-
-## 📜 License
-
-MIT License © 2026 [Thanuprakash Gowda](https://github.com/Thanuprakashgowda)
-
----
-
-<div align="center">
-
-Built with ❤️ by **[Thanuprakash Gowda](https://www.linkedin.com/in/thanuprakash-gowda)** · [GitHub](https://github.com/Thanuprakashgowda) · [LinkedIn](https://www.linkedin.com/in/thanuprakash-gowda)
-
-![LinkedIn](https://img.shields.io/badge/LinkedIn-Thanuprakash%20Gowda-0A66C2?style=flat-square&logo=linkedin&logoColor=white)
-
-</div>
+*Cloud SMS — Empowering Education through Technology.*
