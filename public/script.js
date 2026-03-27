@@ -1,5 +1,95 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Theme Toggle
+    // --- AUTHENTICATION LOGIC ---
+    let token = localStorage.getItem('jwt_token') || null;
+    let schoolName = localStorage.getItem('school_name') || 'Cloud Engineer';
+    
+    const authContainer = document.getElementById('authContainer');
+    const dashboardContainer = document.getElementById('dashboardContainer');
+    const authForm = document.getElementById('authForm');
+    const tabLogin = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const registerFields = document.getElementById('registerFields');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    
+    let isLoginMode = true;
+
+    function checkAuth() {
+        if (token) {
+            authContainer.style.display = 'none';
+            dashboardContainer.style.display = 'flex';
+            document.getElementById('adminSchoolName').textContent = schoolName;
+            
+            // Initial Dashboard Load
+            fetchStudents();
+            loadStats();
+            populateDepartmentDropdowns();
+        } else {
+            authContainer.style.display = 'flex';
+            dashboardContainer.style.display = 'none';
+        }
+    }
+
+    // Toggle Login/Register
+    tabLogin.onclick = () => {
+        isLoginMode = true;
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        registerFields.style.display = 'none';
+        authSubmitBtn.textContent = 'Login';
+    };
+
+    tabRegister.onclick = () => {
+        isLoginMode = false;
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+        registerFields.style.display = 'block';
+        authSubmitBtn.textContent = 'Register Institution';
+    };
+
+    authForm.onsubmit = (e) => {
+        e.preventDefault();
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
+        const school_name = document.getElementById('authSchool').value;
+
+        const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+        const payload = isLoginMode ? { email, password } : { email, password, school_name };
+
+        fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Authentication failed');
+            return data;
+        })
+        .then(data => {
+            if (isLoginMode) {
+                token = data.token;
+                schoolName = data.school;
+                localStorage.setItem('jwt_token', token);
+                localStorage.setItem('school_name', schoolName);
+                checkAuth();
+            } else {
+                alert('Registration successful! Please login.');
+                tabLogin.click();
+                authForm.reset();
+            }
+        })
+        .catch(err => alert(err.message));
+    };
+
+    document.getElementById('logoutBtn').onclick = () => {
+        token = null;
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('school_name');
+        checkAuth();
+    };
+
+
+    // --- THEME TOGGLE ---
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const body = document.body;
     let isDarkMode = localStorage.getItem('theme') === 'dark';
@@ -15,12 +105,11 @@ document.addEventListener('DOMContentLoaded', () => {
             body.setAttribute('data-theme', 'light');
             localStorage.setItem('theme', 'light');
         }
-        // Repaint charts if they exist so labels match theme
         if (window.deptChartInstance) window.deptChartInstance.update();
         if (window.perfChartInstance) window.perfChartInstance.update();
     });
 
-    // Navigation
+    // --- NAVIGATION ---
     const links = document.querySelectorAll('.nav-item');
     const views = {
         'homeView': document.getElementById('homeView'),
@@ -33,17 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
     links.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            // Remove active class
             links.forEach(l => l.classList.remove('active'));
-            // Hide all views
             Object.values(views).forEach(view => view.style.display = 'none');
 
-            // Activate clicked link & show view
-            link.classList.add('active'); // Use 'link' variable instead of e.target which might be the icon
+            link.classList.add('active');
             const targetId = link.getAttribute('data-target');
             if (views[targetId]) {
                 views[targetId].style.display = 'block';
-                // Load data based on view
                 if (targetId === 'studentsView') fetchStudents();
                 if (targetId === 'coursesView') fetchCourses();
                 if (targetId === 'departmentsView') fetchDepartments();
@@ -53,13 +138,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Load Stats for Dashboard
+    // --- FETCH WRAPPER WITH AUTH ---
+    function fetchWithAuth(url, options = {}) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+            ...(options.headers || {})
+        };
+        return fetch(url, { ...options, headers });
+    }
+
+    // --- STATS LOGIC ---
     function loadStats() {
+        if (!token) return;
         Promise.all([
-            fetch('/api/students').then(r => r.json()).catch(() => []),
-            fetch('/api/courses').then(r => r.json()).catch(() => []),
-            fetch('/api/departments').then(r => r.json()).catch(() => []),
-            fetch('/api/stats').then(r => r.json()).catch(() => null)
+            fetchWithAuth('/api/students').then(r => r.json()).catch(() => []),
+            fetchWithAuth('/api/courses').then(r => r.json()).catch(() => []),
+            fetchWithAuth('/api/departments').then(r => r.json()).catch(() => []),
+            fetchWithAuth('/api/stats').then(r => r.json()).catch(() => null)
         ]).then(([students, courses, depts, stats]) => {
             document.getElementById('statsStudentCount').textContent = students.length || 0;
             document.getElementById('statsCourseCount').textContent = courses.length || 0;
@@ -74,48 +170,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCharts(stats) {
         const getThemeColor = () => document.body.getAttribute('data-theme') === 'dark' ? '#f8fafc' : '#1f2937';
         
-        // Department Enrollment Chart (Doughnut)
         const deptCtx = document.getElementById('deptChart');
         if (window.deptChartInstance) window.deptChartInstance.destroy();
         
-        if (stats.departmentDistribution) {
-            const labels = stats.departmentDistribution.map(d => d.department_name);
-            const data = stats.departmentDistribution.map(d => d.student_count);
+        if (stats.departmentDistribution && stats.departmentDistribution.length > 0) {
             window.deptChartInstance = new Chart(deptCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: labels,
+                    labels: stats.departmentDistribution.map(d => d.department_name),
                     datasets: [{
-                        data: data,
+                        data: stats.departmentDistribution.map(d => d.student_count),
                         backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
                         borderWidth: 0
                     }]
                 },
-                options: {
-                    plugins: {
-                        legend: { 
-                            position: 'bottom',
-                            labels: { color: getThemeColor } 
-                        }
-                    }
-                }
+                options: { plugins: { legend: { position: 'bottom', labels: { color: getThemeColor } } } }
             });
         }
 
-        // Course Performance Average Chart (Bar)
         const perfCtx = document.getElementById('perfChart');
         if (window.perfChartInstance) window.perfChartInstance.destroy();
         
-        if (stats.coursePerformance) {
-            const courseLabels = stats.coursePerformance.map(c => c.course_name);
-            const courseData = stats.coursePerformance.map(c => c.average_marks);
+        if (stats.coursePerformance && stats.coursePerformance.length > 0) {
             window.perfChartInstance = new Chart(perfCtx, {
                 type: 'bar',
                 data: {
-                    labels: courseLabels,
+                    labels: stats.coursePerformance.map(c => c.course_name),
                     datasets: [{
                         label: 'Average Marks',
-                        data: courseData,
+                        data: stats.coursePerformance.map(c => c.average_marks),
                         backgroundColor: '#6366f1',
                         borderRadius: 6
                     }]
@@ -125,20 +208,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         x: { ticks: { color: getThemeColor } },
                         y: { ticks: { color: getThemeColor }, beginAtZero: true, max: 100 }
                     },
-                    plugins: {
-                        legend: { display: false }
-                    }
+                    plugins: { legend: { display: false } }
                 }
             });
         }
     }
 
-    // Call loadStats initially
-    loadStats();
-    populateDepartmentDropdowns();
-
     function populateDepartmentDropdowns() {
-        fetch('/api/departments')
+        if(!token) return;
+        fetchWithAuth('/api/departments')
             .then(res => res.json())
             .then(data => {
                 const studentSelect = document.getElementById('studentDeptId');
@@ -147,11 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 studentSelect.innerHTML = '<option value="">Select Department...</option>';
                 courseSelect.innerHTML = '<option value="">Select Department...</option>';
 
-                data.forEach(dept => {
-                    const option = `<option value="${dept.department_id}">${dept.department_name}</option>`;
-                    studentSelect.innerHTML += option;
-                    courseSelect.innerHTML += option;
-                });
+                if(Array.isArray(data)) {
+                    data.forEach(dept => {
+                        const option = `<option value="${dept.department_id}">${dept.department_name}</option>`;
+                        studentSelect.innerHTML += option;
+                        courseSelect.innerHTML += option;
+                    });
+                }
             })
             .catch(err => console.error('Error loading departments:', err));
     }
@@ -161,22 +241,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentModal = document.getElementById('studentModal');
 
     function fetchStudents() {
-        fetch('/api/students')
+        fetchWithAuth('/api/students')
             .then(res => res.json())
             .then(data => {
                 studentTableBody.innerHTML = '';
-                data.forEach(s => {
-                    studentTableBody.innerHTML += `
-                        <tr>
-                            <td>${s.student_id}</td>
-                            <td>${s.first_name} ${s.last_name}</td>
-                            <td>${s.email}</td>
-                            <td>${new Date(s.dob).toLocaleDateString()}</td>
-                            <td>${s.department_name || s.department_id}</td>
-                            <td><button class="btn btn-danger" onclick="deleteItem('students', ${s.student_id})">Delete</button></td>
-                        </tr>
-                    `;
-                });
+                if(Array.isArray(data)) {
+                    data.forEach(s => {
+                        studentTableBody.innerHTML += `
+                            <tr>
+                                <td>${s.student_id}</td>
+                                <td>${s.first_name} ${s.last_name}</td>
+                                <td>${s.email}</td>
+                                <td>${new Date(s.dob).toLocaleDateString()}</td>
+                                <td>${s.department_name || s.department_id || '-'}</td>
+                                <td><button class="btn btn-danger" onclick="deleteItem('students', ${s.student_id})">Delete</button></td>
+                            </tr>
+                        `;
+                    });
+                }
             });
     }
 
@@ -184,12 +266,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('studentForm').addEventListener('submit', (e) => {
         e.preventDefault();
+        // Fix for silent Add Data bug: parse to integer or null instead of empty string!
+        let deptIdRaw = document.getElementById('studentDeptId').value;
         const data = {
             first_name: document.getElementById('firstName').value,
             last_name: document.getElementById('lastName').value,
             email: document.getElementById('email').value,
             dob: document.getElementById('dob').value,
-            department_id: document.getElementById('studentDeptId').value
+            department_id: deptIdRaw ? parseInt(deptIdRaw) : null 
         };
         createItem('students', data, studentModal, fetchStudents);
     });
@@ -199,21 +283,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const courseModal = document.getElementById('courseModal');
 
     function fetchCourses() {
-        fetch('/api/courses')
+        fetchWithAuth('/api/courses')
             .then(res => res.json())
             .then(data => {
                 courseTableBody.innerHTML = '';
-                data.forEach(c => {
-                    courseTableBody.innerHTML += `
-                        <tr>
-                            <td>${c.course_id}</td>
-                            <td>${c.course_name}</td>
-                            <td>${c.credits}</td>
-                            <td>${c.department_name || c.department_id}</td>
-                            <td><button class="btn btn-danger" onclick="deleteItem('courses', ${c.course_id}, fetchCourses)">Delete</button></td>
-                        </tr>
-                    `;
-                });
+                if(Array.isArray(data)){
+                    data.forEach(c => {
+                        courseTableBody.innerHTML += `
+                            <tr>
+                                <td>${c.course_id}</td>
+                                <td>${c.course_name}</td>
+                                <td>${c.credits}</td>
+                                <td>${c.department_name || c.department_id || '-'}</td>
+                                <td><button class="btn btn-danger" onclick="deleteItem('courses', ${c.course_id}, fetchCourses)">Delete</button></td>
+                            </tr>
+                        `;
+                    });
+                }
             });
     }
 
@@ -221,10 +307,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('courseForm').addEventListener('submit', (e) => {
         e.preventDefault();
+         // Parse string to number to avoid SQL invisible failures
+        let deptIdRaw = document.getElementById('courseDeptId').value;
         const data = {
             course_name: document.getElementById('courseName').value,
-            credits: document.getElementById('courseCredits').value,
-            department_id: document.getElementById('courseDeptId').value
+            credits: parseInt(document.getElementById('courseCredits').value) || 0,
+            department_id: deptIdRaw ? parseInt(deptIdRaw) : null
         };
         createItem('courses', data, courseModal, fetchCourses);
     });
@@ -234,20 +322,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const deptModal = document.getElementById('departmentModal');
 
     function fetchDepartments() {
-        fetch('/api/departments')
+        fetchWithAuth('/api/departments')
             .then(res => res.json())
             .then(data => {
                 deptTableBody.innerHTML = '';
-                data.forEach(d => {
-                    deptTableBody.innerHTML += `
-                        <tr>
-                            <td>${d.department_id}</td>
-                            <td>${d.department_name}</td>
-                            <td>${d.head_of_dept}</td>
-                            <td><button class="btn btn-danger" onclick="deleteItem('departments', ${d.department_id}, fetchDepartments)">Delete</button></td>
-                        </tr>
-                    `;
-                });
+                if(Array.isArray(data)){
+                    data.forEach(d => {
+                        deptTableBody.innerHTML += `
+                            <tr>
+                                <td>${d.department_id}</td>
+                                <td>${d.department_name}</td>
+                                <td>${d.head_of_dept}</td>
+                                <td><button class="btn btn-danger" onclick="deleteItem('departments', ${d.department_id}, fetchDepartments)">Delete</button></td>
+                            </tr>
+                        `;
+                    });
+                }
             });
     }
 
@@ -273,22 +363,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function fetchResults() {
-        fetch('/api/marks')
+        fetchWithAuth('/api/marks')
             .then(res => res.json())
             .then(data => {
                 resultsTableBody.innerHTML = '';
-                data.forEach(r => {
-                    resultsTableBody.innerHTML += `
-                        <tr>
-                            <td>${r.first_name} ${r.last_name}</td>
-                            <td>${r.course_name}</td>
-                            <td>${r.department_name || '-'}</td>
-                            <td><span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 8px; border-radius: 4px; font-weight: 500;">${r.grade}</span></td>
-                            <td>${r.marks || 'N/A'}</td>
-                            <td>${getAIInsight(r.marks)}</td>
-                        </tr>
-                    `;
-                });
+                if(Array.isArray(data)){
+                    data.forEach(r => {
+                        resultsTableBody.innerHTML += `
+                            <tr>
+                                <td>${r.first_name} ${r.last_name}</td>
+                                <td>${r.course_name}</td>
+                                <td>${r.department_name || '-'}</td>
+                                <td><span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 8px; border-radius: 4px; font-weight: 500;">${r.grade}</span></td>
+                                <td>${r.marks || 'N/A'}</td>
+                                <td>${getAIInsight(r.marks)}</td>
+                            </tr>
+                        `;
+                    });
+                }
             })
             .catch(err => console.error('Error fetching results:', err));
     }
@@ -296,13 +388,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- SHARED HELPER FUNCTIONS ---
 
     function createItem(endpoint, data, modal, refreshCallback) {
-        fetch(`/api/${endpoint}`, {
+        fetchWithAuth(`/api/${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
             .then(res => {
-                if (!res.ok) throw new Error('API Error');
+                if(res.status === 401 || res.status === 403) {
+                    alert('Session expired. Please log in again.');
+                    document.getElementById('logoutBtn').click();
+                    throw new Error('Unauthorized');
+                }
+                if (!res.ok) throw new Error('API Error - Database Validation Failed');
                 return res.json();
             })
             .then(() => {
@@ -310,19 +406,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 refreshCallback();
                 if (endpoint === 'departments') populateDepartmentDropdowns();
             })
-            .catch(err => alert('Error creating item: ' + err));
+            .catch(err => alert('Error creating item: ' + err.message));
     }
 
     window.deleteItem = (endpoint, id, refreshCallback) => {
         if (confirm('Are you sure?')) {
-            fetch(`/api/${endpoint}/${id}`, { method: 'DELETE' })
-                .then(() => {
+            fetchWithAuth(`/api/${endpoint}/${id}`, { method: 'DELETE' })
+                .then(res => {
+                    if (!res.ok) throw new Error('Delete Failed');
                     if (refreshCallback) refreshCallback();
                     else fetchStudents();
                     
                     if (endpoint === 'departments') populateDepartmentDropdowns();
                 })
-                .catch(err => alert('Error deleting: ' + err));
+                .catch(err => alert('Error deleting: ' + err.message));
         }
     };
 
@@ -339,6 +436,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Initial Load
-    fetchStudents();
+    // Initial Execution
+    checkAuth();
 });

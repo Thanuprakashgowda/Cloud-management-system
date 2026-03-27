@@ -25,10 +25,25 @@ app.get("/", (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+const verifyToken = require("./middleware/verifyToken.js");
+
+// Public Auth Route
+require("./routes/auth.routes.js")(app);
+
+// Protected API Routes
+app.use('/api/students', verifyToken);
 require("./routes/student.routes.js")(app);
+
+app.use('/api/courses', verifyToken);
 require("./routes/course.routes.js")(app);
+
+app.use('/api/departments', verifyToken);
 require("./routes/department.routes.js")(app);
+
+app.use('/api/marks', verifyToken);
 require("./routes/mark.routes.js")(app);
+
+app.use('/api/stats', verifyToken);
 require("./routes/stats.routes.js")(app);
 
 // Start Server

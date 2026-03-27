@@ -52,7 +52,16 @@ CREATE TABLE IF NOT EXISTS marks (
     INDEX idx_marks (marks) -- Index for range queries like "above average"
 );
 
+-- 6. Administrators Table (Authentication)
+CREATE TABLE IF NOT EXISTS administrators (
+    admin_id INT PRIMARY KEY AUTO_INCREMENT,
+    school_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for Optimization
 CREATE INDEX idx_student_email ON students(email);
 CREATE INDEX idx_course_name ON courses(course_name);
-
+CREATE INDEX idx_admin_email ON administrators(email);

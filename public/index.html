@@ -13,7 +13,42 @@
 </head>
 
 <body>
-    <div class="dashboard-container">
+    <!-- Auth Container -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-card">
+            <div class="logo justify-center">
+                <i class="fas fa-cloud"></i>
+                <span>Cloud<b>SMS</b></span>
+            </div>
+            <h2>Welcome Admin</h2>
+            <p>Sign in to manage your institution</p>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin">Login</div>
+                <div class="auth-tab" id="tabRegister">Register</div>
+            </div>
+
+            <form id="authForm">
+                <div id="registerFields" style="display: none;">
+                    <div class="input-group">
+                        <label>School Name</label>
+                        <input type="text" id="authSchool">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary full-width" id="authSubmitBtn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="dashboard-container" id="dashboardContainer">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
@@ -42,12 +77,17 @@
                     <img src="https://ui-avatars.com/api/?name=Admin+User&background=random" alt="User">
                     <div>
                         <h4>Admin User</h4>
-                        <p>Cloud Engineer</p>
+                        <p id="adminSchoolName">Cloud Engineer</p>
                     </div>
                 </div>
-                <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark Mode">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <div>
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark Mode" style="margin-right: 10px;">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="logoutBtn" class="theme-toggle-btn" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
             </div>
         </aside>
 
