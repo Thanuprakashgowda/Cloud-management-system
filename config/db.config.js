@@ -3,6 +3,7 @@ module.exports = {
   USER: process.env.DB_USER || "root",
   PASSWORD: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : "password",
   DB: process.env.DB_NAME || "student_management_system",
+  PORT: process.env.DB_PORT || 3306,
   dialect: "mysql",
   pool: {
     max: 5,
