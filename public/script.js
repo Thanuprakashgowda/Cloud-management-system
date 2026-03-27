@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td>${s.email}</td>
                                 <td>${new Date(s.dob).toLocaleDateString()}</td>
                                 <td>${s.department_name || s.department_id || '-'}</td>
-                                <td><button class="btn btn-danger" onclick="deleteItem('students', ${s.student_id})">Delete</button></td>
+                                <td><button class="btn btn-danger" onclick="deleteItem('students', ${s.student_id})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                         `;
                     });
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td>${c.course_name}</td>
                                 <td>${c.credits}</td>
                                 <td>${c.department_name || c.department_id || '-'}</td>
-                                <td><button class="btn btn-danger" onclick="deleteItem('courses', ${c.course_id}, fetchCourses)">Delete</button></td>
+                                <td><button class="btn btn-danger" onclick="deleteItem('courses', ${c.course_id})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                         `;
                     });
@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td>${d.department_id}</td>
                                 <td>${d.department_name}</td>
                                 <td>${d.head_of_dept}</td>
-                                <td><button class="btn btn-danger" onclick="deleteItem('departments', ${d.department_id}, fetchDepartments)">Delete</button></td>
+                                <td><button class="btn btn-danger" onclick="deleteItem('departments', ${d.department_id})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                         `;
                     });
@@ -665,38 +665,103 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') sendChatMessage();
     });
 
-    // ========== PDF EXPORT ==========
+    // ========== PDF EXPORT (Structured) ==========
     window.exportToPDF = (tableBodyId, title) => {
         const { jsPDF } = window.jspdf;
-        if (!jsPDF) return alert('PDF library not loaded yet.');
+        if (!jsPDF) return alert('PDF library not loaded yet. Please wait a moment and try again.');
 
-        const doc = new jsPDF();
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const now = new Date();
+
+        // ---- Header Banner ----
+        doc.setFillColor(79, 70, 229);
+        doc.rect(0, 0, pageW, 22, 'F');
+
+        doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
-        doc.text(title, 14, 18);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100);
-        doc.text(`Exported on ${new Date().toLocaleDateString()}`, 14, 26);
+        doc.setFontSize(14);
+        doc.text('☁ Cloud SMS — ' + title, 10, 14);
 
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`School: ${localStorage.getItem('school_name') || 'N/A'}`, pageW - 10, 9, { align: 'right' });
+        doc.text(`Exported: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, pageW - 10, 15, { align: 'right' });
+
+        // ---- Summary Row ----
+        doc.setFillColor(240, 244, 255);
+        doc.rect(0, 22, pageW, 12, 'F');
+        doc.setTextColor(79, 70, 229);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        const students = document.getElementById('statsStudentCount').textContent;
+        const courses = document.getElementById('statsCourseCount').textContent;
+        const depts = document.getElementById('statsDeptCount').textContent;
+        doc.text(`Total Students: ${students}   |   Total Courses: ${courses}   |   Departments: ${depts}`, 10, 29);
+
+        // ---- Table Data ----
         const table = document.getElementById(tableBodyId).closest('table');
-        const headers = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim());
-        const rows = [...table.querySelectorAll(`#${tableBodyId} tr`)].map(tr =>
-            [...tr.querySelectorAll('td')].map(td => td.textContent.trim())
-        );
+        const headers = [...table.querySelectorAll('thead th')]
+            .map(th => th.textContent.trim())
+            .filter(h => h !== 'Actions'); // exclude Actions column
+
+        const rows = [...table.querySelectorAll(`#${tableBodyId} tr`)].map(tr => {
+            const cells = [...tr.querySelectorAll('td')];
+            return cells
+                .filter((_, i) => headers.length > i) // skip Actions column
+                .map(td => {
+                    // Strip all HTML tags and get clean text content
+                    const clone = td.cloneNode(true);
+                    // Replace button/badge HTML with their text
+                    clone.querySelectorAll('button').forEach(btn => {
+                        const txt = btn.textContent.trim().replace('Ask AI', 'AI Available').replace('', '');
+                        btn.replaceWith(document.createTextNode(txt));
+                    });
+                    clone.querySelectorAll('.ai-badge').forEach(badge => {
+                        badge.replaceWith(document.createTextNode(badge.textContent.trim()));
+                    });
+                    return clone.textContent.trim() || '—';
+                });
+        });
 
         doc.autoTable({
             head: [headers],
             body: rows,
-            startY: 32,
-            styles: { fontSize: 9, cellPadding: 4 },
-            headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
-            alternateRowStyles: { fillColor: [245, 247, 255] },
-            margin: { left: 14, right: 14 }
+            startY: 36,
+            styles: {
+                fontSize: 9,
+                cellPadding: { top: 4, right: 6, bottom: 4, left: 6 },
+                lineColor: [220, 225, 240],
+                lineWidth: 0.3,
+                textColor: [15, 23, 42]
+            },
+            headStyles: {
+                fillColor: [79, 70, 229],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                fontSize: 8.5,
+                cellPadding: { top: 5, right: 6, bottom: 5, left: 6 }
+            },
+            alternateRowStyles: { fillColor: [248, 250, 255] },
+            columnStyles: { 0: { cellWidth: 'auto' } },
+            margin: { left: 10, right: 10 },
+            didDrawPage: (data) => {
+                // Footer on every page
+                const pgCount = doc.internal.getNumberOfPages();
+                doc.setFontSize(7.5);
+                doc.setTextColor(150);
+                doc.setFont('helvetica', 'normal');
+                doc.text(
+                    `Page ${data.pageNumber} of ${pgCount}  |  Generated by Cloud SMS`,
+                    pageW / 2, doc.internal.pageSize.getHeight() - 6,
+                    { align: 'center' }
+                );
+            }
         });
 
-        doc.save(`${title.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+        doc.save(`CloudSMS_${title.replace(/\s+/g, '_')}_${now.toISOString().slice(0,10)}.pdf`);
     };
+
 
     // ========== EXCEL EXPORT ==========
     window.exportToExcel = (tableBodyId, sheetName) => {
