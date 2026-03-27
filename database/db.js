@@ -3,7 +3,7 @@ const dbConfig = require("../config/db.config.js");
 
 // Create a connection pool to the database
 // pools handle dropped connections automatically which is necessary for serverless usage on Vercel
-const pool = mysql.createPool({
+const poolOptions = {
     host: dbConfig.HOST,
     user: dbConfig.USER,
     password: dbConfig.PASSWORD,
@@ -12,7 +12,15 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: dbConfig.pool ? dbConfig.pool.max : 10,
     queueLimit: 0
-});
+};
+
+// Extremely Important: Cloud Databases like TiDB Cloud REQUIRE SSL encrypton.
+// We apply SSL strictly when not hosting locally. 
+if (dbConfig.HOST !== 'localhost' && dbConfig.HOST !== '127.0.0.1') {
+    poolOptions.ssl = { minVersion: 'TLSv1.2', rejectUnauthorized: true };
+}
+
+const pool = mysql.createPool(poolOptions);
 
 // Test the connection pool
 pool.getConnection((error, connection) => {
