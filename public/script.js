@@ -431,11 +431,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- RESULTS LOGIC & AI PLANNER ---
     const resultsTableBody = document.getElementById('resultsTableBody');
+    const resultModal = document.getElementById('resultModal');
 
     function getAIInsightButton(r) {
         if (r.marks === null || r.marks === undefined) return '<span class="ai-badge risk">No Data</span>';
-        
-        // Return a clickable AI button mapping all data
         const dataPayload = encodeURIComponent(JSON.stringify({
             student_name: `${r.first_name} ${r.last_name}`,
             course_name: r.course_name,
@@ -443,7 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
             grade: r.grade,
             marks: r.marks
         }));
-        
         return `<button class="ai-btn" onclick="openAIStudentPlan('${dataPayload}')"><i class="fas fa-magic ai-glow"></i> Ask AI</button>`;
     }
 
@@ -451,19 +449,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentData = JSON.parse(decodeURIComponent(encodedData));
         const modal = document.getElementById('aiPlanModal');
         const contentBox = document.getElementById('aiPlanContent');
-        
         document.getElementById('aiPlanStudentName').textContent = studentData.student_name;
         contentBox.innerHTML = '<i class="fas fa-spinner fa-spin ai-glow"></i> Analyzing grades and formulating strategy...';
         modal.style.display = 'flex';
-
-        fetchWithAuth('/api/ai/student', {
-            method: 'POST',
-            body: JSON.stringify(studentData)
-        })
+        fetchWithAuth('/api/ai/student', { method: 'POST', body: JSON.stringify(studentData) })
         .then(res => res.json())
         .then(data => {
             if (data.message && data.message.includes('missing')) throw new Error(data.message);
-            // Replace newlines with <br> and bold markers
             let htmlPlan = data.plan.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             contentBox.innerHTML = htmlPlan;
         })
@@ -477,16 +469,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 resultsTableBody.innerHTML = '';
-                if(Array.isArray(data)){
+                if (Array.isArray(data)) {
                     data.forEach(r => {
                         resultsTableBody.innerHTML += `
                             <tr>
                                 <td>${r.first_name} ${r.last_name}</td>
                                 <td>${r.course_name}</td>
                                 <td>${r.department_name || '-'}</td>
-                                <td><span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 8px; border-radius: 4px; font-weight: 500;">${r.grade}</span></td>
-                                <td>${r.marks || 'N/A'}</td>
+                                <td><span style="background:rgba(59,130,246,0.1);color:#3b82f6;padding:2px 8px;border-radius:4px;font-weight:500;">${r.grade || '-'}</span></td>
+                                <td><strong>${r.marks !== null && r.marks !== undefined ? r.marks : 'N/A'}</strong></td>
                                 <td>${getAIInsightButton(r)}</td>
+                                <td><button class="btn btn-danger" style="padding:4px 10px;font-size:0.8rem;" onclick="deleteResult(${r.enrollment_id})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                         `;
                     });
@@ -494,6 +487,70 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => console.error('Error fetching results:', err));
     }
+
+    // Populate student and course dropdowns in the result modal
+    function populateResultDropdowns() {
+        Promise.all([
+            fetchWithAuth('/api/students').then(r => r.json()),
+            fetchWithAuth('/api/courses').then(r => r.json())
+        ]).then(([students, courses]) => {
+            const studentSel = document.getElementById('resultStudentId');
+            const courseSel = document.getElementById('resultCourseId');
+            studentSel.innerHTML = '<option value="">Select Student...</option>';
+            courseSel.innerHTML = '<option value="">Select Course...</option>';
+            if (Array.isArray(students)) {
+                students.forEach(s => {
+                    studentSel.innerHTML += `<option value="${s.student_id}">${s.first_name} ${s.last_name}</option>`;
+                });
+            }
+            if (Array.isArray(courses)) {
+                courses.forEach(c => {
+                    courseSel.innerHTML += `<option value="${c.course_id}">${c.course_name}</option>`;
+                });
+            }
+        });
+    }
+
+    document.getElementById('addResultBtn').onclick = () => {
+        populateResultDropdowns();
+        resultModal.style.display = 'flex';
+    };
+
+    document.getElementById('resultForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = {
+            student_id: parseInt(document.getElementById('resultStudentId').value),
+            course_id: parseInt(document.getElementById('resultCourseId').value),
+            grade: document.getElementById('resultGrade').value || null,
+            marks: document.getElementById('resultMarks').value || null
+        };
+        if (!data.student_id || !data.course_id) {
+            alert('Please select both a student and a course.');
+            return;
+        }
+        fetchWithAuth('/api/marks', { method: 'POST', body: JSON.stringify(data) })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to save result');
+                return res.json();
+            })
+            .then(() => {
+                resultModal.style.display = 'none';
+                document.getElementById('resultForm').reset();
+                fetchResults();
+            })
+            .catch(err => alert('Error: ' + err.message));
+    });
+
+    window.deleteResult = (enrollmentId) => {
+        if (confirm('Delete this result? This will also remove the enrollment record.')) {
+            fetchWithAuth(`/api/marks/${enrollmentId}`, { method: 'DELETE' })
+                .then(res => {
+                    if (!res.ok) throw new Error('Delete failed');
+                    fetchResults();
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+    };
 
     // --- SHARED HELPER FUNCTIONS ---
 
@@ -519,15 +576,18 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => alert('Error creating item: ' + err.message));
     }
 
-    window.deleteItem = (endpoint, id, refreshCallback) => {
-        if (confirm('Are you sure?')) {
+    window.deleteItem = (endpoint, id) => {
+        if (confirm('Are you sure you want to delete this record?')) {
             fetchWithAuth(`/api/${endpoint}/${id}`, { method: 'DELETE' })
                 .then(res => {
                     if (!res.ok) throw new Error('Delete Failed');
-                    if (refreshCallback) refreshCallback();
-                    else fetchStudents();
-                    
-                    if (endpoint === 'departments') populateDepartmentDropdowns();
+                    // Refresh the correct table based on endpoint name
+                    if (endpoint === 'students') fetchStudents();
+                    else if (endpoint === 'courses') fetchCourses();
+                    else if (endpoint === 'departments') {
+                        fetchDepartments();
+                        populateDepartmentDropdowns();
+                    }
                 })
                 .catch(err => alert('Error deleting: ' + err.message));
         }
