@@ -503,6 +503,119 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ========== CHATBOT LOGIC ==========
+    const chatbotWidget = document.getElementById('chatbotWidget');
+    const chatbotHeader = document.getElementById('chatbotHeader');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+
+    // Toggle open/close
+    chatbotHeader.onclick = () => {
+        chatbotWidget.classList.toggle('collapsed');
+    };
+    // Start collapsed
+    chatbotWidget.classList.add('collapsed');
+
+    function appendMessage(text, sender) {
+        const div = document.createElement('div');
+        div.classList.add('chat-message', sender);
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return div;
+    }
+
+    async function sendChatMessage() {
+        const question = chatInput.value.trim();
+        if (!question) return;
+
+        chatInput.value = '';
+        appendMessage(question, 'user');
+
+        const typingEl = appendMessage('CloudBot is thinking...', 'typing');
+
+        // Build live context from cached stats and counts
+        const context = {
+            totalStudents: document.getElementById('statsStudentCount').textContent,
+            totalCourses: document.getElementById('statsCourseCount').textContent,
+            totalDepartments: document.getElementById('statsDeptCount').textContent,
+            chartStats: cachedStats || {}
+        };
+
+        try {
+            const res = await fetchWithAuth('/api/ai/chat', {
+                method: 'POST',
+                body: JSON.stringify({ question, context })
+            });
+            const data = await res.json();
+            typingEl.remove();
+            appendMessage(data.answer || data.message || 'Sorry, I could not process that.', 'bot');
+        } catch (err) {
+            typingEl.remove();
+            appendMessage('Connection error. Please check your Gemini API key.', 'bot');
+        }
+    }
+
+    chatSendBtn.onclick = sendChatMessage;
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendChatMessage();
+    });
+
+    // ========== PDF EXPORT ==========
+    window.exportToPDF = (tableBodyId, title) => {
+        const { jsPDF } = window.jspdf;
+        if (!jsPDF) return alert('PDF library not loaded yet.');
+
+        const doc = new jsPDF();
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text(title, 14, 18);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text(`Exported on ${new Date().toLocaleDateString()}`, 14, 26);
+
+        const table = document.getElementById(tableBodyId).closest('table');
+        const headers = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim());
+        const rows = [...table.querySelectorAll(`#${tableBodyId} tr`)].map(tr =>
+            [...tr.querySelectorAll('td')].map(td => td.textContent.trim())
+        );
+
+        doc.autoTable({
+            head: [headers],
+            body: rows,
+            startY: 32,
+            styles: { fontSize: 9, cellPadding: 4 },
+            headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [245, 247, 255] },
+            margin: { left: 14, right: 14 }
+        });
+
+        doc.save(`${title.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+    };
+
+    // ========== EXCEL EXPORT ==========
+    window.exportToExcel = (tableBodyId, sheetName) => {
+        if (!window.XLSX) return alert('Excel library not loaded yet.');
+
+        const table = document.getElementById(tableBodyId).closest('table');
+        const headers = [...table.querySelectorAll('thead th')].map(th => th.textContent.trim());
+        const rows = [...table.querySelectorAll(`#${tableBodyId} tr`)].map(tr =>
+            [...tr.querySelectorAll('td')].map(td => td.textContent.trim())
+        );
+
+        const wsData = [headers, ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
+
+        // Style the header row width
+        ws['!cols'] = headers.map(() => ({ wch: 20 }));
+
+        XLSX.writeFile(wb, `${sheetName}_${Date.now()}.xlsx`);
+    };
+
     // Initial Execution
     checkAuth();
 });

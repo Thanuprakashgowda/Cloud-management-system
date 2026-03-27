@@ -69,3 +69,41 @@ exports.generateStudentPlan = async (req, res) => {
         res.status(500).send({ message: err.message || "Failed to generate Student Plan." });
     }
 };
+
+exports.chatWithData = async (req, res) => {
+    try {
+        const { question, context } = req.body;
+
+        if (!question) {
+             return res.status(400).send({ message: "A question is required." });
+        }
+
+        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+            return res.status(500).send({ message: "GEMINI_API_KEY is missing. Please configure it in Vercel to use the Chatbot!" });
+        }
+
+        const prompt = `
+        You are a highly intelligent Cloud Management System assistant named "CloudBot".
+        Your system administrator is asking you a question about their live database.
+        
+        Live Database Context (JSON):
+        ${JSON.stringify(context || {})}
+        
+        Admin Question: "${question}"
+        
+        Answer their question directly based ONLY on the JSON context provided above. 
+        Keep your response conversational, extremely concise (2-3 sentences max), and professional. Do not use markdown like bolding or lists, just plain text. If the answer cannot be found in the context, say "I don't have enough data to see that right now."
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        res.status(200).send({ answer: response.text });
+
+    } catch (err) {
+        console.error("AI Chat Error:", err);
+        res.status(500).send({ message: err.message || "Failed to process chat." });
+    }
+};

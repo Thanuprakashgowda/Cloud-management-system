@@ -8,5 +8,8 @@ module.exports = app => {
     // Generate specific student action plan
     router.post("/student", ai.generateStudentPlan);
 
+    // AI Conversational Chatbot
+    router.post("/chat", ai.chatWithData);
+
     app.use('/api/ai', router);
 };
