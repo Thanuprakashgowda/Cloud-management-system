@@ -1,4 +1,4 @@
-# ☁ Cloud SMS — AI-Powered School Management System
+# ☁ Cloud SMS — AI-Powered School/College/University Management System
 
 <div align="center">
 
