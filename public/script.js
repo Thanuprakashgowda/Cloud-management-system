@@ -377,31 +377,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 data: {
                     labels: stats.coursePerformance.map(c => c.course_name),
                     datasets: [
-                        // Shadow/glow layer
-                        {
-                            label: '',
-                            data: scores,
-                            backgroundColor: scores.map(s =>
-                                s >= 75 ? 'rgba(16,185,129,0.12)' :
-                                s >= 50 ? 'rgba(245,158,11,0.12)' :
-                                          'rgba(239,68,68,0.12)'
-                            ),
-                            borderRadius: 10,
-                            borderSkipped: false,
-                            barPercentage: 0.7,
-                            categoryPercentage: 0.8,
-                        },
-                        // Main bars
                         {
                             label: 'Avg Marks',
                             data: scores,
                             backgroundColor: barColors,
-                            borderColor: barColors.map(c => c.replace('0.85', '1')),
-                            borderWidth: 0,
+                            hoverBackgroundColor: scores.map(s =>
+                                s >= 75 ? 'rgba(16,185,129,1)' :
+                                s >= 50 ? 'rgba(245,158,11,1)' :
+                                          'rgba(239,68,68,1)'
+                            ),
                             borderRadius: 10,
                             borderSkipped: false,
-                            barPercentage: 0.55,
-                            categoryPercentage: 0.8,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.75,
                         }
                     ]
                 },
@@ -427,6 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             min: 0, max: 100
                         }
                     },
+                    interaction: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -437,13 +429,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             borderWidth: 1,
                             padding: 12,
                             cornerRadius: 12,
-                            filter: (item) => item.datasetIndex === 1, // only show for main bars
+                            displayColors: false,
                             callbacks: {
                                 title: ctx => ctx[0].label,
                                 label: ctx => {
                                     const v = ctx.raw;
                                     const grade = v >= 75 ? '🟢 Excellent' : v >= 50 ? '🟡 Average' : '🔴 Needs Improvement';
-                                    return [`  Score: ${v} / 100`, `  Status: ${grade}`];
+                                    return [`  Score: ${v} / 100`, `  Grade: ${grade}`];
                                 }
                             }
                         }
@@ -451,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     animation: {
                         duration: 900,
                         easing: 'easeOutQuart',
-                        delay: (ctx) => ctx.datasetIndex === 1 ? ctx.dataIndex * 80 : 0
+                        delay: ctx => ctx.dataIndex * 80
                     }
                 }
             });
