@@ -268,51 +268,103 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCharts(stats) {
-        const getThemeColor = () => document.body.getAttribute('data-theme') === 'dark' ? '#f8fafc' : '#1f2937';
-        
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+        const gridColor = isDark ? 'rgba(99,102,241,0.1)' : 'rgba(79,70,229,0.07)';
+
         const deptCtx = document.getElementById('deptChart');
+        const deptWrap = deptCtx?.parentElement;
         if (window.deptChartInstance) window.deptChartInstance.destroy();
-        
+
         if (stats.departmentDistribution && stats.departmentDistribution.length > 0) {
+            deptCtx.style.display = '';
+            deptWrap?.querySelector('.chart-empty')?.remove();
             window.deptChartInstance = new Chart(deptCtx, {
                 type: 'doughnut',
                 data: {
                     labels: stats.departmentDistribution.map(d => d.department_name),
                     datasets: [{
                         data: stats.departmentDistribution.map(d => d.student_count),
-                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-                        borderWidth: 0
+                        backgroundColor: ['#4f46e5','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6'],
+                        borderWidth: 3,
+                        borderColor: isDark ? '#0d1528' : '#fff',
+                        hoverOffset: 8
                     }]
                 },
-                options: { plugins: { legend: { position: 'bottom', labels: { color: getThemeColor } } } }
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textColor, padding: 16, font: { family: 'Inter', size: 12 } }
+                        }
+                    },
+                    cutout: '68%',
+                    animation: { animateRotate: true, duration: 800 }
+                }
             });
+        } else {
+            deptCtx.style.display = 'none';
+            if (!deptWrap?.querySelector('.chart-empty')) {
+                const msg = document.createElement('div');
+                msg.className = 'chart-empty';
+                msg.innerHTML = `<i class="fas fa-users" style="font-size:2rem;color:var(--border-strong);"></i><p style="color:var(--text-muted);margin-top:8px;font-size:0.85rem;">Add students to departments<br>to see enrollment distribution</p>`;
+                msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;';
+                deptWrap?.appendChild(msg);
+            }
         }
 
         const perfCtx = document.getElementById('perfChart');
+        const perfWrap = perfCtx?.parentElement;
         if (window.perfChartInstance) window.perfChartInstance.destroy();
-        
+
         if (stats.coursePerformance && stats.coursePerformance.length > 0) {
+            perfCtx.style.display = '';
+            perfWrap?.querySelector('.chart-empty')?.remove();
             window.perfChartInstance = new Chart(perfCtx, {
                 type: 'bar',
                 data: {
                     labels: stats.coursePerformance.map(c => c.course_name),
                     datasets: [{
                         label: 'Average Marks',
-                        data: stats.coursePerformance.map(c => c.average_marks),
-                        backgroundColor: '#6366f1',
-                        borderRadius: 6
+                        data: stats.coursePerformance.map(c => parseFloat(c.average_marks)),
+                        backgroundColor: (ctx) => {
+                            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+                            gradient.addColorStop(0, 'rgba(79,70,229,0.85)');
+                            gradient.addColorStop(1, 'rgba(6,182,212,0.6)');
+                            return gradient;
+                        },
+                        borderRadius: 8,
+                        borderSkipped: false
                     }]
                 },
                 options: {
                     scales: {
-                        x: { ticks: { color: getThemeColor } },
-                        y: { ticks: { color: getThemeColor }, beginAtZero: true, max: 100 }
+                        x: { ticks: { color: textColor, font: { family: 'Inter' } }, grid: { color: gridColor } },
+                        y: {
+                            ticks: { color: textColor, font: { family: 'Inter' } },
+                            grid: { color: gridColor },
+                            beginAtZero: true, max: 100
+                        }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} / 100 marks` } }
+                    },
+                    animation: { duration: 800 }
                 }
             });
+        } else {
+            perfCtx.style.display = 'none';
+            if (!perfWrap?.querySelector('.chart-empty')) {
+                const msg = document.createElement('div');
+                msg.className = 'chart-empty';
+                msg.innerHTML = `<i class="fas fa-chart-bar" style="font-size:2rem;color:var(--border-strong);"></i><p style="color:var(--text-muted);margin-top:8px;font-size:0.85rem;">Add results with marks<br>to see course performance</p>`;
+                msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;';
+                perfWrap?.appendChild(msg);
+            }
         }
     }
+
 
     function populateDepartmentDropdowns() {
         if(!token) return;

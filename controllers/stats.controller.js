@@ -10,12 +10,15 @@ exports.getDashboardStats = (req, res) => {
             FROM departments d 
             LEFT JOIN students s ON d.department_id = s.department_id 
             GROUP BY d.department_id
+            HAVING student_count > 0
         `,
         courseAverages: `
-            SELECT c.course_name, AVG(m.marks) as average_marks 
-            FROM courses c 
-            JOIN marks m ON c.course_id = m.course_id 
+            SELECT c.course_name, ROUND(AVG(m.marks), 1) as average_marks
+            FROM courses c
+            JOIN enrollments e ON c.course_id = e.course_id
+            JOIN marks m ON e.enrollment_id = m.enrollment_id
             GROUP BY c.course_id
+            ORDER BY average_marks DESC
         `
     };
 
@@ -28,7 +31,8 @@ exports.getDashboardStats = (req, res) => {
             if (hasError) return;
             if (err) {
                 hasError = true;
-                return res.status(500).send({ message: "Error fetching stats" });
+                console.error(`Stats query [${key}] failed:`, err.message);
+                return res.status(500).send({ message: `Error fetching stats: ${err.message}` });
             }
             results[key] = data;
             pending--;
