@@ -20,38 +20,102 @@
 <body>
     <!-- Auth Container -->
     <div class="auth-container" id="authContainer">
-        <div class="auth-card">
-            <div class="logo justify-center">
-                <i class="fas fa-cloud"></i>
-                <span>Cloud<b>SMS</b></span>
-            </div>
-            <h2>Welcome Admin</h2>
-            <p>Sign in to manage your institution</p>
-            
-            <div class="auth-tabs">
-                <div class="auth-tab active" id="tabLogin">Login</div>
-                <div class="auth-tab" id="tabRegister">Register</div>
-            </div>
 
-            <form id="authForm">
-                <div id="registerFields" style="display: none;">
-                    <div class="input-group">
-                        <label>School Name</label>
-                        <input type="text" id="authSchool">
-                    </div>
+        <!-- Left: Branding Panel -->
+        <div class="auth-branding">
+            <div class="auth-branding-inner">
+                <div class="auth-logo-mark">
+                    <i class="fas fa-cloud"></i>
                 </div>
-                <div class="input-group">
-                    <label>Email Address</label>
-                    <input type="email" id="authEmail" required>
+                <h1 class="auth-brand-title">Cloud<span>SMS</span></h1>
+                <p class="auth-brand-sub">Smart Institution Management Platform</p>
+                <div class="auth-features">
+                    <div class="auth-feat"><i class="fas fa-chart-pie"></i> <span>AI-Powered Analytics</span></div>
+                    <div class="auth-feat"><i class="fas fa-shield-alt"></i> <span>Data Isolated Per Account</span></div>
+                    <div class="auth-feat"><i class="fas fa-calendar-check"></i> <span>Attendance Tracking</span></div>
+                    <div class="auth-feat"><i class="fas fa-robot"></i> <span>Gemini AI Insights</span></div>
                 </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="authPassword" required>
+                <div class="auth-branding-credit">
+                    Built by <a href="https://www.linkedin.com/in/thanuprakash-gowda/" target="_blank" rel="noopener">
+                        <i class="fab fa-linkedin"></i> Thanuprakash Gowda
+                    </a>
                 </div>
-                <button type="submit" class="btn btn-primary full-width" id="authSubmitBtn">Login</button>
-            </form>
+            </div>
+            <!-- Animated blobs -->
+            <div class="auth-blob auth-blob-1"></div>
+            <div class="auth-blob auth-blob-2"></div>
+            <div class="auth-blob auth-blob-3"></div>
+        </div>
+
+        <!-- Right: Form Panel -->
+        <div class="auth-form-panel">
+            <div class="auth-form-inner">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tabLogin">Sign In</button>
+                    <button class="auth-tab" id="tabRegister">Register</button>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <div id="loginPanel">
+                    <h2 class="auth-form-title">Welcome back</h2>
+                    <p class="auth-form-sub">Sign in to your institution dashboard</p>
+                    <form id="loginForm" autocomplete="on">
+                        <div class="input-group">
+                            <label><i class="fas fa-envelope"></i> Email Address</label>
+                            <input type="email" id="loginEmail" placeholder="admin@institution.edu" required autocomplete="email">
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-lock"></i> Password</label>
+                            <div style="position:relative;">
+                                <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+                                <button type="button" id="toggleLoginPass" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary full-width" id="loginSubmitBtn">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </button>
+                        <p id="loginMsg" style="margin-top:10px;text-align:center;font-size:0.82rem;color:var(--danger-color);display:none;"></p>
+                    </form>
+                </div>
+
+                <!-- REGISTER FORM -->
+                <div id="registerPanel" style="display:none;">
+                    <h2 class="auth-form-title">Create Account</h2>
+                    <p class="auth-form-sub">Register your school or college</p>
+                    <form id="registerForm" autocomplete="off">
+                        <div class="input-group">
+                            <label><i class="fas fa-university"></i> Institution Type</label>
+                            <select id="regInstitutionType" class="form-control">
+                                <option value="School">School</option>
+                                <option value="College">College</option>
+                                <option value="University">University</option>
+                                <option value="Institute">Institute</option>
+                                <option value="Academy">Academy</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-building"></i> <span id="instNameLabel">School Name</span></label>
+                            <input type="text" id="regSchoolName" placeholder="e.g. St. Joseph's School" required>
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-envelope"></i> Email Address</label>
+                            <input type="email" id="regEmail" placeholder="admin@institution.edu" required>
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fas fa-lock"></i> Password</label>
+                            <input type="password" id="regPassword" placeholder="Min 6 characters" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary full-width" id="registerSubmitBtn">
+                            <i class="fas fa-rocket"></i> Register Institution
+                        </button>
+                        <p id="registerMsg" style="margin-top:10px;text-align:center;font-size:0.82rem;display:none;"></p>
+                    </form>
+                </div>
+
+            </div>
         </div>
     </div>
+
 
     <div class="dashboard-container" id="dashboardContainer">
         <!-- Sidebar -->
@@ -555,6 +619,48 @@
                         <input type="number" id="resultMarks" min="0" max="100" placeholder="e.g. 85">
                     </div>
                     <button type="submit" class="btn btn-primary full-width">Save Result</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Result Modal -->
+    <div id="editResultModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit" style="color:var(--primary-color);"></i> Edit Result</h3>
+                <span class="close-modal" data-modal="editResultModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editEnrollmentId">
+                <div class="input-group">
+                    <label>Student</label>
+                    <input type="text" id="editStudentName" disabled style="opacity:0.7;">
+                </div>
+                <div class="input-group">
+                    <label>Course</label>
+                    <input type="text" id="editCourseName" disabled style="opacity:0.7;">
+                </div>
+                <div class="input-group">
+                    <label>Grade</label>
+                    <select id="editResultGrade">
+                        <option value="">Select Grade...</option>
+                        <option value="A+">A+</option>
+                        <option value="A">A</option>
+                        <option value="B+">B+</option>
+                        <option value="B">B</option>
+                        <option value="C+">C+</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="F">F</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Marks (0–100)</label>
+                    <input type="number" id="editResultMarks" min="0" max="100" placeholder="e.g. 85">
+                </div>
+                <form id="editResultForm">
+                    <button type="submit" class="btn btn-primary full-width"><i class="fas fa-save"></i> Update Result</button>
                 </form>
             </div>
         </div>

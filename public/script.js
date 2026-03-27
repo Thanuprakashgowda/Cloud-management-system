@@ -1,30 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- AUTHENTICATION LOGIC ---
     let token = localStorage.getItem('jwt_token') || null;
-    let schoolName = localStorage.getItem('school_name') || 'Cloud Engineer';
-    
+    let schoolName = localStorage.getItem('school_name') || 'Cloud SMS';
+    let institutionType = localStorage.getItem('institution_type') || 'School';
+
     const authContainer = document.getElementById('authContainer');
     const dashboardContainer = document.getElementById('dashboardContainer');
-    const authForm = document.getElementById('authForm');
     const tabLogin = document.getElementById('tabLogin');
     const tabRegister = document.getElementById('tabRegister');
-    const registerFields = document.getElementById('registerFields');
-    const authSubmitBtn = document.getElementById('authSubmitBtn');
-    
-    let isLoginMode = true;
+    const loginPanel = document.getElementById('loginPanel');
+    const registerPanel = document.getElementById('registerPanel');
 
     function checkAuth() {
         if (token) {
             authContainer.style.display = 'none';
             dashboardContainer.style.display = 'flex';
-            document.getElementById('adminSchoolName').textContent = schoolName;
+            document.getElementById('adminSchoolName').textContent = `${institutionType}: ${schoolName}`;
             document.getElementById('adminDisplayName').textContent = 'Admin';
-
-            // Update avatar with school name initials
             const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(schoolName)}&background=4f46e5&color=fff&bold=true`;
             document.getElementById('adminAvatarImg').src = avatarUrl;
-
-            // Initial Dashboard Load
             fetchStudents();
             loadStats();
             populateDepartmentDropdowns();
@@ -34,64 +28,124 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Toggle Login/Register
+    // Tab switching
     tabLogin.onclick = () => {
-        isLoginMode = true;
         tabLogin.classList.add('active');
         tabRegister.classList.remove('active');
-        registerFields.style.display = 'none';
-        authSubmitBtn.textContent = 'Login';
+        loginPanel.style.display = 'block';
+        registerPanel.style.display = 'none';
     };
-
     tabRegister.onclick = () => {
-        isLoginMode = false;
         tabRegister.classList.add('active');
         tabLogin.classList.remove('active');
-        registerFields.style.display = 'block';
-        authSubmitBtn.textContent = 'Register Institution';
+        loginPanel.style.display = 'none';
+        registerPanel.style.display = 'block';
     };
 
-    authForm.onsubmit = (e) => {
-        e.preventDefault();
-        const email = document.getElementById('authEmail').value;
-        const password = document.getElementById('authPassword').value;
-        const school_name = document.getElementById('authSchool').value;
+    // Institution type → update label
+    const regType = document.getElementById('regInstitutionType');
+    const instNameLabel = document.getElementById('instNameLabel');
+    if (regType) {
+        regType.addEventListener('change', () => {
+            if (instNameLabel) instNameLabel.textContent = `${regType.value} Name`;
+        });
+    }
 
-        const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
-        const payload = isLoginMode ? { email, password } : { email, password, school_name };
+    // Password visibility toggle
+    const toggleLoginPass = document.getElementById('toggleLoginPass');
+    const loginPasswordEl = document.getElementById('loginPassword');
+    if (toggleLoginPass) {
+        toggleLoginPass.onclick = () => {
+            const isText = loginPasswordEl.type === 'text';
+            loginPasswordEl.type = isText ? 'password' : 'text';
+            toggleLoginPass.innerHTML = `<i class="fas fa-${isText ? 'eye' : 'eye-slash'}"></i>`;
+        };
+    }
 
-        fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(async res => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Authentication failed');
-            return data;
-        })
-        .then(data => {
-            if (isLoginMode) {
+    // Login form
+    const loginForm = document.getElementById('loginForm');
+    const loginMsg  = document.getElementById('loginMsg');
+    if (loginForm) {
+        loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email    = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            try {
+                const res  = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Login failed.');
                 token = data.token;
                 schoolName = data.school;
+                institutionType = data.institution_type || 'School';
                 localStorage.setItem('jwt_token', token);
                 localStorage.setItem('school_name', schoolName);
+                localStorage.setItem('institution_type', institutionType);
                 checkAuth();
-            } else {
-                alert('Registration successful! Please login.');
-                tabLogin.click();
-                authForm.reset();
+            } catch (err) {
+                if (loginMsg) { loginMsg.textContent = err.message; loginMsg.style.display = 'block'; }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
             }
-        })
-        .catch(err => alert(err.message));
-    };
+        };
+    }
+
+    // Register form
+    const registerForm = document.getElementById('registerForm');
+    const registerMsg  = document.getElementById('registerMsg');
+    if (registerForm) {
+        registerForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const school_name      = document.getElementById('regSchoolName').value.trim();
+            const institution_type = document.getElementById('regInstitutionType').value;
+            const email            = document.getElementById('regEmail').value.trim();
+            const password         = document.getElementById('regPassword').value;
+            const btn = document.getElementById('registerSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+            try {
+                const res  = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ school_name, institution_type, email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Registration failed.');
+                if (registerMsg) {
+                    registerMsg.style.color = '#10b981';
+                    registerMsg.textContent = '✅ ' + data.message + ' Please sign in.';
+                    registerMsg.style.display = 'block';
+                }
+                registerForm.reset();
+                setTimeout(() => tabLogin.click(), 2000);
+            } catch (err) {
+                if (registerMsg) {
+                    registerMsg.style.color = '#ef4444';
+                    registerMsg.textContent = err.message;
+                    registerMsg.style.display = 'block';
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> Register Institution';
+            }
+        };
+    }
 
     document.getElementById('logoutBtn').onclick = () => {
         token = null;
         localStorage.removeItem('jwt_token');
         localStorage.removeItem('school_name');
+        localStorage.removeItem('institution_type');
         checkAuth();
     };
+
 
     // --- ADMIN PROFILE MODAL ---
     const adminProfileBtn = document.getElementById('adminProfileBtn');
@@ -628,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function getAIInsightButton(r) {
         if (r.marks === null || r.marks === undefined) return '<span class="ai-badge risk">No Data</span>';
         const dataPayload = encodeURIComponent(JSON.stringify({
-            student_name: `${r.first_name} ${r.last_name}`,
+            student_name: r.student_name || `${r.first_name||''} ${r.last_name||''}`,
             course_name: r.course_name,
             department_name: r.department_name || 'General',
             grade: r.grade,
@@ -663,15 +717,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultsTableBody.innerHTML = '';
                 if (Array.isArray(data)) {
                     data.forEach(r => {
+                        const name = r.student_name || `${r.first_name||''} ${r.last_name||''}`;
                         resultsTableBody.innerHTML += `
                             <tr>
-                                <td>${r.first_name} ${r.last_name}</td>
+                                <td>${name}</td>
                                 <td>${r.course_name}</td>
                                 <td>${r.department_name || '-'}</td>
                                 <td><span style="background:rgba(59,130,246,0.1);color:#3b82f6;padding:2px 8px;border-radius:4px;font-weight:500;">${r.grade || '-'}</span></td>
                                 <td><strong>${r.marks !== null && r.marks !== undefined ? r.marks : 'N/A'}</strong></td>
                                 <td>${getAIInsightButton(r)}</td>
-                                <td><button class="btn btn-danger" style="padding:4px 10px;font-size:0.8rem;" onclick="deleteResult(${r.enrollment_id})"><i class="fas fa-trash"></i></button></td>
+                                <td style="display:flex;gap:5px;">
+                                    <button class="btn" style="padding:4px 10px;font-size:0.8rem;background:rgba(99,102,241,0.1);color:var(--primary);border:1px solid var(--border);" onclick="openEditResult(${r.enrollment_id},'${name}','${r.course_name}','${r.grade||''}',${r.marks||0})"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-danger" style="padding:4px 10px;font-size:0.8rem;" onclick="deleteResult(${r.enrollment_id})"><i class="fas fa-trash"></i></button>
+                                </td>
                             </tr>
                         `;
                     });
@@ -744,7 +802,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- SHARED HELPER FUNCTIONS ---
+    // --- EDIT RESULT ---
+    window.openEditResult = (enrollmentId, studentName, courseName, grade, marks) => {
+        document.getElementById('editEnrollmentId').value = enrollmentId;
+        document.getElementById('editStudentName').value  = studentName;
+        document.getElementById('editCourseName').value   = courseName;
+        const gradeSelect = document.getElementById('editResultGrade');
+        gradeSelect.value = grade || '';
+        document.getElementById('editResultMarks').value  = marks || '';
+        document.getElementById('editResultModal').style.display = 'flex';
+    };
+
+    document.getElementById('editResultForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const enrollmentId = document.getElementById('editEnrollmentId').value;
+        const grade = document.getElementById('editResultGrade').value || null;
+        const marks = document.getElementById('editResultMarks').value;
+        fetchWithAuth(`/api/marks/${enrollmentId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ grade, marks })
+        })
+        .then(res => {
+            if (!res.ok) return res.json().then(d => { throw new Error(d.message); });
+            return res.json();
+        })
+        .then(() => {
+            document.getElementById('editResultModal').style.display = 'none';
+            fetchResults();
+        })
+        .catch(err => alert('Update error: ' + err.message));
+    });
+
 
     function createItem(endpoint, data, modal, refreshCallback) {
         fetchWithAuth(`/api/${endpoint}`, {
