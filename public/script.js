@@ -148,7 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return fetch(url, { ...options, headers });
     }
 
-    // --- STATS LOGIC ---
+    // --- STATS & AI DASHBOARD LOGIC ---
+    let cachedStats = null;
+
     function loadStats() {
         if (!token) return;
         Promise.all([
@@ -162,9 +164,41 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('statsDeptCount').textContent = depts.length || 0;
 
             if (stats && window.Chart) {
+                cachedStats = stats;
                 renderCharts(stats);
             }
         });
+    }
+
+    const generateAiBtn = document.getElementById('generateAiReportBtn');
+    const aiSummaryText = document.getElementById('aiSummaryText');
+    
+    if (generateAiBtn) {
+        generateAiBtn.onclick = () => {
+            if (!cachedStats) {
+                alert("Stats not loaded yet.");
+                return;
+            }
+            aiSummaryText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Executive Report...';
+            
+            fetchWithAuth('/api/ai/report', {
+                method: 'POST',
+                body: JSON.stringify({ stats: cachedStats })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to generate AI report');
+                return res.json();
+            })
+            .then(data => {
+                // Convert simple markdown (**bold**) to HTML manually for safety
+                let formattedText = data.report.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                aiSummaryText.innerHTML = formattedText;
+                aiSummaryText.style.color = 'var(--text-color)';
+            })
+            .catch(err => {
+                aiSummaryText.innerHTML = '<span style="color:var(--danger-color)">Error connecting to AI. Is your Gemini Key valid?</span>';
+            });
+        };
     }
 
     function renderCharts(stats) {
@@ -352,15 +386,48 @@ document.addEventListener('DOMContentLoaded', () => {
         createItem('departments', data, deptModal, fetchDepartments);
     });
 
-    // --- RESULTS LOGIC ---
+    // --- RESULTS LOGIC & AI PLANNER ---
     const resultsTableBody = document.getElementById('resultsTableBody');
 
-    function getAIInsight(marks) {
-        if (marks === null || marks === undefined) return '<span class="ai-badge risk">No Data</span>';
-        if (marks >= 85) return '<span class="ai-badge excellent"><i class="fas fa-star"></i> Excelling</span>';
-        if (marks >= 60) return '<span class="ai-badge good"><i class="fas fa-check"></i> On Track</span>';
-        return '<span class="ai-badge risk"><i class="fas fa-exclamation-triangle"></i> At Risk</span>';
+    function getAIInsightButton(r) {
+        if (r.marks === null || r.marks === undefined) return '<span class="ai-badge risk">No Data</span>';
+        
+        // Return a clickable AI button mapping all data
+        const dataPayload = encodeURIComponent(JSON.stringify({
+            student_name: `${r.first_name} ${r.last_name}`,
+            course_name: r.course_name,
+            department_name: r.department_name || 'General',
+            grade: r.grade,
+            marks: r.marks
+        }));
+        
+        return `<button class="ai-btn" onclick="openAIStudentPlan('${dataPayload}')"><i class="fas fa-magic ai-glow"></i> Ask AI</button>`;
     }
+
+    window.openAIStudentPlan = (encodedData) => {
+        const studentData = JSON.parse(decodeURIComponent(encodedData));
+        const modal = document.getElementById('aiPlanModal');
+        const contentBox = document.getElementById('aiPlanContent');
+        
+        document.getElementById('aiPlanStudentName').textContent = studentData.student_name;
+        contentBox.innerHTML = '<i class="fas fa-spinner fa-spin ai-glow"></i> Analyzing grades and formulating strategy...';
+        modal.style.display = 'flex';
+
+        fetchWithAuth('/api/ai/student', {
+            method: 'POST',
+            body: JSON.stringify(studentData)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message && data.message.includes('missing')) throw new Error(data.message);
+            // Replace newlines with <br> and bold markers
+            let htmlPlan = data.plan.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            contentBox.innerHTML = htmlPlan;
+        })
+        .catch(err => {
+            contentBox.innerHTML = `<span style="color:var(--danger-color)"><i class="fas fa-exclamation-triangle"></i> AI Failed: ${err.message}</span>`;
+        });
+    };
 
     function fetchResults() {
         fetchWithAuth('/api/marks')
@@ -376,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td>${r.department_name || '-'}</td>
                                 <td><span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 2px 8px; border-radius: 4px; font-weight: 500;">${r.grade}</span></td>
                                 <td>${r.marks || 'N/A'}</td>
-                                <td>${getAIInsight(r.marks)}</td>
+                                <td>${getAIInsightButton(r)}</td>
                             </tr>
                         `;
                     });

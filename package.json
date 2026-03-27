@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Thanuprakashgowda/Cloud-management-system#readme",
   "dependencies": {
+    "@google/genai": "^1.46.0",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",

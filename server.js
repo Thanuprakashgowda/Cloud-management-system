@@ -46,6 +46,9 @@ require("./routes/mark.routes.js")(app);
 app.use('/api/stats', verifyToken);
 require("./routes/stats.routes.js")(app);
 
+app.use('/api/ai', verifyToken);
+require("./routes/ai.routes.js")(app);
+
 // Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

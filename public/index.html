@@ -123,17 +123,35 @@
                         <div class="stat-info">
                             <h3>Departments</h3>
                             <p class="stat-number" id="statsDeptCount">Loading...</p>
+                        <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                        <div>
+                            <h3 id="statsStudentCount">0</h3>
+                            <p>Total Students</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-book"></i></div>
+                        <div>
+                            <h3 id="statsCourseCount">0</h3>
+                            <p>Active Courses</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-building"></i></div>
+                        <div>
+                            <h3 id="statsDeptCount">0</h3>
+                            <p>Departments</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <h3><i class="fas fa-chart-pie"></i> Enrollment Distribution</h3>
+                <div class="charts-grid" style="margin-top: 30px;">
+                    <div class="chart-container">
+                        <h3>Enrollment Distribution</h3>
                         <canvas id="deptChart"></canvas>
                     </div>
-                    <div class="chart-card">
-                        <h3><i class="fas fa-chart-line"></i> Course Performance Average</h3>
+                    <div class="chart-container">
+                        <h3>Course Performance Average</h3>
                         <canvas id="perfChart"></canvas>
                     </div>
                 </div>
@@ -331,6 +349,23 @@
         </div>
     </div>
 
+    <!-- AI Action Plan Modal -->
+    <div class="modal-overlay" id="aiPlanModal">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-robot ai-glow"></i> AI Personalized Action Plan</h2>
+                <button class="close-modal" data-modal="aiPlanModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Student:</strong> <span id="aiPlanStudentName"></span></p>
+                <div id="aiPlanContent" style="margin-top: 15px; padding: 15px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; line-height: 1.6;">
+                    Scanning academic metrics...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="script.js"></script>
 </body>
 
