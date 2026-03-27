@@ -269,88 +269,190 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderCharts(stats) {
         const isDark = document.body.getAttribute('data-theme') === 'dark';
-        const textColor = isDark ? '#94a3b8' : '#64748b';
-        const gridColor = isDark ? 'rgba(99,102,241,0.1)' : 'rgba(79,70,229,0.07)';
+        const textColor   = isDark ? '#94a3b8' : '#64748b';
+        const gridColor   = isDark ? 'rgba(148,163,184,0.06)' : 'rgba(79,70,229,0.06)';
+        const bgCard      = isDark ? '#111c3a' : '#ffffff';
 
-        const deptCtx = document.getElementById('deptChart');
+        // Premium palette
+        const palette = [
+            '#6366f1', '#06b6d4', '#10b981',
+            '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
+        ];
+
+        // ============ DOUGHNUT CHART ============
+        const deptCtx  = document.getElementById('deptChart');
         const deptWrap = deptCtx?.parentElement;
+        const centerEl = document.getElementById('deptChartCenter');
+        const centerNum = document.getElementById('deptCenterNum');
         if (window.deptChartInstance) window.deptChartInstance.destroy();
 
-        if (stats.departmentDistribution && stats.departmentDistribution.length > 0) {
+        if (stats.departmentDistribution?.length > 0) {
             deptCtx.style.display = '';
             deptWrap?.querySelector('.chart-empty')?.remove();
+
+            const totalStudents = stats.departmentDistribution.reduce((s, d) => s + d.student_count, 0);
+            if (centerEl) { centerEl.style.display = 'block'; centerNum.textContent = totalStudents; }
+
             window.deptChartInstance = new Chart(deptCtx, {
                 type: 'doughnut',
                 data: {
                     labels: stats.departmentDistribution.map(d => d.department_name),
                     datasets: [{
                         data: stats.departmentDistribution.map(d => d.student_count),
-                        backgroundColor: ['#4f46e5','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6'],
-                        borderWidth: 3,
-                        borderColor: isDark ? '#0d1528' : '#fff',
-                        hoverOffset: 8
+                        backgroundColor: palette,
+                        borderWidth: 4,
+                        borderColor: bgCard,
+                        hoverBorderColor: bgCard,
+                        hoverBorderWidth: 4,
+                        hoverOffset: 12
                     }]
                 },
                 options: {
+                    cutout: '72%',
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: textColor, padding: 16, font: { family: 'Inter', size: 12 } }
+                            labels: {
+                                color: textColor,
+                                padding: 18,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: { family: 'Inter', size: 12, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e3a5f' : '#fff',
+                            titleColor: isDark ? '#e2e8f0' : '#0f172a',
+                            bodyColor: isDark ? '#94a3b8' : '#64748b',
+                            borderColor: isDark ? 'rgba(99,102,241,0.3)' : 'rgba(79,70,229,0.2)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: ctx => ` ${ctx.label}: ${ctx.raw} students (${Math.round(ctx.raw / totalStudents * 100)}%)`
+                            }
                         }
                     },
-                    cutout: '68%',
-                    animation: { animateRotate: true, duration: 800 }
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 900,
+                        easing: 'easeOutQuart'
+                    }
                 }
             });
         } else {
             deptCtx.style.display = 'none';
+            if (centerEl) centerEl.style.display = 'none';
             if (!deptWrap?.querySelector('.chart-empty')) {
                 const msg = document.createElement('div');
                 msg.className = 'chart-empty';
-                msg.innerHTML = `<i class="fas fa-users" style="font-size:2rem;color:var(--border-strong);"></i><p style="color:var(--text-muted);margin-top:8px;font-size:0.85rem;">Add students to departments<br>to see enrollment distribution</p>`;
-                msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;';
+                msg.innerHTML = `<i class="fas fa-users" style="font-size:2.5rem;color:var(--border-strong);"></i><p style="color:var(--text-muted);margin-top:10px;font-size:0.85rem;line-height:1.6;">Assign students to departments<br>to see enrollment distribution</p>`;
+                msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;text-align:center;';
                 deptWrap?.appendChild(msg);
             }
         }
 
-        const perfCtx = document.getElementById('perfChart');
+        // ============ BAR CHART ============
+        const perfCtx  = document.getElementById('perfChart');
         const perfWrap = perfCtx?.parentElement;
         if (window.perfChartInstance) window.perfChartInstance.destroy();
 
-        if (stats.coursePerformance && stats.coursePerformance.length > 0) {
+        if (stats.coursePerformance?.length > 0) {
             perfCtx.style.display = '';
             perfWrap?.querySelector('.chart-empty')?.remove();
+
+            const scores = stats.coursePerformance.map(c => parseFloat(c.average_marks));
+
+            // Score-based bar colors: green ≥75, amber 50-74, red <50
+            const barColors = scores.map(s =>
+                s >= 75 ? 'rgba(16,185,129,0.85)' :
+                s >= 50 ? 'rgba(245,158,11,0.85)' :
+                          'rgba(239,68,68,0.85)'
+            );
+
             window.perfChartInstance = new Chart(perfCtx, {
                 type: 'bar',
                 data: {
                     labels: stats.coursePerformance.map(c => c.course_name),
-                    datasets: [{
-                        label: 'Average Marks',
-                        data: stats.coursePerformance.map(c => parseFloat(c.average_marks)),
-                        backgroundColor: (ctx) => {
-                            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
-                            gradient.addColorStop(0, 'rgba(79,70,229,0.85)');
-                            gradient.addColorStop(1, 'rgba(6,182,212,0.6)');
-                            return gradient;
+                    datasets: [
+                        // Shadow/glow layer
+                        {
+                            label: '',
+                            data: scores,
+                            backgroundColor: scores.map(s =>
+                                s >= 75 ? 'rgba(16,185,129,0.12)' :
+                                s >= 50 ? 'rgba(245,158,11,0.12)' :
+                                          'rgba(239,68,68,0.12)'
+                            ),
+                            borderRadius: 10,
+                            borderSkipped: false,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8,
                         },
-                        borderRadius: 8,
-                        borderSkipped: false
-                    }]
+                        // Main bars
+                        {
+                            label: 'Avg Marks',
+                            data: scores,
+                            backgroundColor: barColors,
+                            borderColor: barColors.map(c => c.replace('0.85', '1')),
+                            borderWidth: 0,
+                            borderRadius: 10,
+                            borderSkipped: false,
+                            barPercentage: 0.55,
+                            categoryPercentage: 0.8,
+                        }
+                    ]
                 },
                 options: {
                     scales: {
-                        x: { ticks: { color: textColor, font: { family: 'Inter' } }, grid: { color: gridColor } },
+                        x: {
+                            ticks: { color: textColor, font: { family: 'Inter', size: 11 } },
+                            grid: { display: false },
+                            border: { display: false }
+                        },
                         y: {
-                            ticks: { color: textColor, font: { family: 'Inter' } },
-                            grid: { color: gridColor },
-                            beginAtZero: true, max: 100
+                            ticks: {
+                                color: textColor,
+                                font: { family: 'Inter', size: 11 },
+                                stepSize: 25,
+                                callback: v => v + '%'
+                            },
+                            grid: {
+                                color: gridColor,
+                                drawTicks: false
+                            },
+                            border: { display: false, dash: [4, 4] },
+                            min: 0, max: 100
                         }
                     },
                     plugins: {
                         legend: { display: false },
-                        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} / 100 marks` } }
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e3a5f' : '#fff',
+                            titleColor: isDark ? '#e2e8f0' : '#0f172a',
+                            bodyColor: isDark ? '#94a3b8' : '#64748b',
+                            borderColor: isDark ? 'rgba(99,102,241,0.3)' : 'rgba(79,70,229,0.2)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 12,
+                            filter: (item) => item.datasetIndex === 1, // only show for main bars
+                            callbacks: {
+                                title: ctx => ctx[0].label,
+                                label: ctx => {
+                                    const v = ctx.raw;
+                                    const grade = v >= 75 ? '🟢 Excellent' : v >= 50 ? '🟡 Average' : '🔴 Needs Improvement';
+                                    return [`  Score: ${v} / 100`, `  Status: ${grade}`];
+                                }
+                            }
+                        }
                     },
-                    animation: { duration: 800 }
+                    animation: {
+                        duration: 900,
+                        easing: 'easeOutQuart',
+                        delay: (ctx) => ctx.datasetIndex === 1 ? ctx.dataIndex * 80 : 0
+                    }
                 }
             });
         } else {
@@ -358,8 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!perfWrap?.querySelector('.chart-empty')) {
                 const msg = document.createElement('div');
                 msg.className = 'chart-empty';
-                msg.innerHTML = `<i class="fas fa-chart-bar" style="font-size:2rem;color:var(--border-strong);"></i><p style="color:var(--text-muted);margin-top:8px;font-size:0.85rem;">Add results with marks<br>to see course performance</p>`;
-                msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;';
+                msg.innerHTML = `<i class="fas fa-chart-bar" style="font-size:2.5rem;color:var(--border-strong);"></i><p style="color:var(--text-muted);margin-top:10px;font-size:0.85rem;line-height:1.6;">Add results with marks<br>to see course performance</p>`;
+                msg.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;text-align:center;';
                 perfWrap?.appendChild(msg);
             }
         }
@@ -367,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function populateDepartmentDropdowns() {
+
         if(!token) return;
         fetchWithAuth('/api/departments')
             .then(res => res.json())

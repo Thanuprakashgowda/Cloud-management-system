@@ -137,15 +137,43 @@
                 </div>
 
 
-                <div class="charts-grid" style="margin-top: 30px;">
-                    <div class="chart-container">
-                        <h3>Enrollment Distribution</h3>
-                        <canvas id="deptChart"></canvas>
+                <div class="charts-grid" style="margin-top: 1.75rem;">
+                    <!-- Doughnut: Enrollment Distribution -->
+                    <div class="chart-container" style="position:relative;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                            <div>
+                                <h3 style="margin:0 0 2px; font-size:0.8rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-muted);">Enrollment Distribution</h3>
+                                <p style="margin:0; font-size:1.1rem; font-weight:700; color:var(--text);">By Department</p>
+                            </div>
+                            <span style="background:rgba(79,70,229,0.1); color:var(--primary); border:1px solid rgba(79,70,229,0.2); border-radius:20px; padding:3px 10px; font-size:0.75rem; font-weight:600;">
+                                <i class="fas fa-circle-notch"></i> Live
+                            </span>
+                        </div>
+                        <!-- Center label for doughnut -->
+                        <div style="position:relative; display:flex; align-items:center; justify-content:center;">
+                            <div id="deptChartCenter" style="position:absolute; text-align:center; pointer-events:none; z-index:1; display:none;">
+                                <div style="font-size:1.6rem; font-weight:800; color:var(--text);" id="deptCenterNum">0</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Students</div>
+                            </div>
+                            <canvas id="deptChart" style="max-height:220px;"></canvas>
+                        </div>
                     </div>
+
+                    <!-- Bar: Course Performance -->
                     <div class="chart-container">
-                        <h3>Course Performance Average</h3>
-                        <canvas id="perfChart"></canvas>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                            <div>
+                                <h3 style="margin:0 0 2px; font-size:0.8rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-muted);">Course Performance</h3>
+                                <p style="margin:0; font-size:1.1rem; font-weight:700; color:var(--text);">Average Marks / 100</p>
+                            </div>
+                            <span style="background:rgba(6,182,212,0.1); color:#06b6d4; border:1px solid rgba(6,182,212,0.25); border-radius:20px; padding:3px 10px; font-size:0.75rem; font-weight:600;">
+                                <i class="fas fa-chart-bar"></i> Scores
+                            </span>
+                        </div>
+                        <canvas id="perfChart" style="max-height:220px;"></canvas>
                     </div>
+                </div>
+
                 </div>
             </div>
 
