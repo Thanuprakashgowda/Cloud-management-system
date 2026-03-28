@@ -39,6 +39,7 @@
 
     /* Sidebar */
     --sidebar-w: 260px;
+    --sidebar-collapsed-w: 70px;
 }
 
 [data-theme="dark"] {
@@ -345,6 +346,7 @@ body {
     z-index: 20;
     flex-shrink: 0;
     box-shadow: 2px 0 20px rgba(0,0,0,0.04);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
 }
 
 .logo {
@@ -431,7 +433,19 @@ body {
     border-radius: 0 4px 4px 0;
 }
 
+/* Sidebar Toggle for Mobile */
+#mobileToggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--text);
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
 .sidebar-footer {
+    margin-top: auto;
     border-top: 1px solid var(--border);
     padding-top: 1rem;
     display: flex;
@@ -983,7 +997,7 @@ body {
     position: fixed;
     bottom: 24px; right: 24px;
     width: 360px;
-    z-index: 9999;
+    z-index: 900;
     border-radius: 18px;
     overflow: hidden;
     box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-strong);
@@ -1108,4 +1122,35 @@ body {
 .credit-divider {
     color: var(--text-muted);
     font-size: 1rem;
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN (Fixes Alignment Glitches)
+   ============================================================ */
+@media (max-width: 1024px) {
+    :root { --sidebar-w: 240px; }
+    .charts-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    #mobileToggle { display: block; }
+    .sidebar {
+        position: fixed;
+        left: 0; top: 0; bottom: 0;
+        transform: translateX(-100%);
+        z-index: 2000;
+    }
+    .sidebar.active { transform: translateX(0); }
+    .main-content { margin-left: 0; width: 100vw; }
+    .top-bar { padding: 1rem; }
+    .page-area { padding: 1rem; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .modern-table { display: block; overflow-x: auto; }
+}
+
+@media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .top-bar .search-bar { display: none; }
+    .btn { padding: 8px 12px; font-size: 0.75rem; }
+    .section-header { flex-direction: column; align-items: flex-start; }
 }

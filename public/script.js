@@ -206,6 +206,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.perfChartInstance) window.perfChartInstance.update();
     });
 
+    // --- MOBILE SIDEBAR TOGGLE ---
+    const mobileToggle = document.getElementById('mobileToggle');
+    const sidebar = document.querySelector('.sidebar');
+    if (mobileToggle && sidebar) {
+        mobileToggle.onclick = (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+        };
+        // Close sidebar when clicking outside on mobile
+        dashboardContainer.onclick = (e) => {
+            if (window.innerWidth <= 768 && sidebar.classList.contains('active') && !sidebar.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        };
+    }
+
     // --- NAVIGATION ---
     const links = document.querySelectorAll('.nav-item');
     const views = {
@@ -240,10 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (views[targetId]) {
             views[targetId].style.display = 'block';
 
-            // Always scroll back to top when switching views
-            if (mainContent) mainContent.scrollTop = 0;
+            // Close mobile sidebar on navigation
+            if (window.innerWidth <= 768 && sidebar) sidebar.classList.remove('active');
 
-            // Update top-bar greeting to match the current view
+            if (mainContent) mainContent.scrollTop = 0;
             const topBarTitle = document.querySelector('.top-bar h2');
             if (topBarTitle && pageTitles[targetId]) topBarTitle.textContent = pageTitles[targetId];
 
@@ -564,24 +580,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentModal = document.getElementById('studentModal');
 
     function fetchStudents() {
+        if (!studentTableBody) return;
+        studentTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading students...</td></tr>';
+        
         fetchWithAuth('/api/students')
             .then(res => res.json())
             .then(data => {
                 studentTableBody.innerHTML = '';
-                if(Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     data.forEach(s => {
-                        studentTableBody.innerHTML += `
-                            <tr>
-                                <td>${s.student_id}</td>
-                                <td>${s.first_name} ${s.last_name}</td>
-                                <td>${s.email}</td>
-                                <td>${new Date(s.dob).toLocaleDateString()}</td>
-                                <td>${s.department_name || s.department_id || '-'}</td>
-                                <td><button class="btn btn-danger" onclick="deleteItem('students', ${s.student_id})"><i class="fas fa-trash"></i></button></td>
-                            </tr>
-                        `;
+                        try {
+                            const dobStr = s.dob ? new Date(s.dob).toLocaleDateString() : 'N/A';
+                            studentTableBody.innerHTML += `
+                                <tr>
+                                    <td>${s.student_id}</td>
+                                    <td>${s.first_name || ''} ${s.last_name || ''}</td>
+                                    <td>${s.email || '-'}</td>
+                                    <td>${dobStr}</td>
+                                    <td>${s.department_name || s.department_id || '-'}</td>
+                                    <td><button class="btn btn-danger" onclick="deleteItem('students', ${s.student_id})"><i class="fas fa-trash"></i></button></td>
+                                </tr>
+                            `;
+                        } catch (err) { console.error('Error rendering student row:', err); }
                     });
+                } else {
+                    studentTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No students found. Click "Add Student" to start.</td></tr>';
                 }
+            })
+            .catch(err => {
+                studentTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:2rem;">Failed to load students. Please try again.</td></tr>';
             });
     }
 
@@ -606,23 +633,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const courseModal = document.getElementById('courseModal');
 
     function fetchCourses() {
+        if (!courseTableBody) return;
+        courseTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading courses...</td></tr>';
+
         fetchWithAuth('/api/courses')
             .then(res => res.json())
             .then(data => {
                 courseTableBody.innerHTML = '';
-                if(Array.isArray(data)){
+                if(Array.isArray(data) && data.length > 0){
                     data.forEach(c => {
                         courseTableBody.innerHTML += `
                             <tr>
                                 <td>${c.course_id}</td>
-                                <td>${c.course_name}</td>
-                                <td>${c.credits}</td>
+                                <td>${c.course_name || 'Unnamed Course'}</td>
+                                <td>${c.credits || 0}</td>
                                 <td>${c.department_name || c.department_id || '-'}</td>
                                 <td><button class="btn btn-danger" onclick="deleteItem('courses', ${c.course_id})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                         `;
                     });
+                } else {
+                    courseTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No courses found.</td></tr>';
                 }
+            })
+            .catch(err => {
+                courseTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:2rem;">Error loading courses.</td></tr>';
             });
     }
 
@@ -645,22 +680,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const deptModal = document.getElementById('departmentModal');
 
     function fetchDepartments() {
+        if (!deptTableBody) return;
+        deptTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading departments...</td></tr>';
+
         fetchWithAuth('/api/departments')
             .then(res => res.json())
             .then(data => {
                 deptTableBody.innerHTML = '';
-                if(Array.isArray(data)){
+                if(Array.isArray(data) && data.length > 0){
                     data.forEach(d => {
                         deptTableBody.innerHTML += `
                             <tr>
                                 <td>${d.department_id}</td>
-                                <td>${d.department_name}</td>
-                                <td>${d.head_of_dept}</td>
+                                <td>${d.department_name || 'Unknown'}</td>
+                                <td>${d.head_of_dept || '-'}</td>
                                 <td><button class="btn btn-danger" onclick="deleteItem('departments', ${d.department_id})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                         `;
                     });
+                } else {
+                    deptTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">No departments found.</td></tr>';
                 }
+            })
+            .catch(err => {
+                deptTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:2rem;">Error loading departments.</td></tr>';
             });
     }
 
@@ -711,31 +754,40 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function fetchResults() {
+        if (!resultsTableBody) return;
+        resultsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading results...</td></tr>';
+
         fetchWithAuth('/api/marks')
             .then(res => res.json())
             .then(data => {
                 resultsTableBody.innerHTML = '';
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     data.forEach(r => {
-                        const name = r.student_name || `${r.first_name||''} ${r.last_name||''}`;
-                        resultsTableBody.innerHTML += `
-                            <tr>
-                                <td>${name}</td>
-                                <td>${r.course_name}</td>
-                                <td>${r.department_name || '-'}</td>
-                                <td><span style="background:rgba(59,130,246,0.1);color:#3b82f6;padding:2px 8px;border-radius:4px;font-weight:500;">${r.grade || '-'}</span></td>
-                                <td><strong>${r.marks !== null && r.marks !== undefined ? r.marks : 'N/A'}</strong></td>
-                                <td>${getAIInsightButton(r)}</td>
-                                <td style="display:flex;gap:5px;">
-                                    <button class="btn" style="padding:4px 10px;font-size:0.8rem;background:rgba(99,102,241,0.1);color:var(--primary);border:1px solid var(--border);" onclick="openEditResult(${r.enrollment_id},'${name}','${r.course_name}','${r.grade||''}',${r.marks||0})"><i class="fas fa-edit"></i></button>
-                                    <button class="btn btn-danger" style="padding:4px 10px;font-size:0.8rem;" onclick="deleteResult(${r.enrollment_id})"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                        `;
+                        try {
+                            const name = r.student_name || `${r.first_name||''} ${r.last_name||''}`;
+                            resultsTableBody.innerHTML += `
+                                <tr>
+                                    <td>${name}</td>
+                                    <td>${r.course_name || '-'}</td>
+                                    <td>${r.department_name || '-'}</td>
+                                    <td><span style="background:rgba(59,130,246,0.1);color:#3b82f6;padding:2px 8px;border-radius:4px;font-weight:500;">${r.grade || '-'}</span></td>
+                                    <td><strong>${r.marks !== null && r.marks !== undefined ? r.marks : 'N/A'}</strong></td>
+                                    <td>${getAIInsightButton(r)}</td>
+                                    <td style="display:flex;gap:5px;">
+                                        <button class="btn" style="padding:4px 10px;font-size:0.8rem;background:rgba(99,102,241,0.1);color:var(--primary);border:1px solid var(--border);" onclick="openEditResult(${r.enrollment_id},'${name.replace(/'/g, "\\'")}','${(r.course_name||'').replace(/'/g, "\\'")}','${r.grade||''}',${r.marks||0})"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-danger" style="padding:4px 10px;font-size:0.8rem;" onclick="deleteResult(${r.enrollment_id})"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            `;
+                        } catch (err) { console.error('Error rendering result row:', err); }
                     });
+                } else {
+                    resultsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No grading results found.</td></tr>';
                 }
             })
-            .catch(err => console.error('Error fetching results:', err));
+            .catch(err => {
+                resultsTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:2rem;">Error loading results.</td></tr>';
+            });
     }
 
     // Populate student and course dropdowns in the result modal
