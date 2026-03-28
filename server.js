@@ -16,8 +16,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // Database Connection is handled in individual controllers via database/db.js
-// We don't need to require it here for the app to start, but good to check connection once
-require("./database/db.js");
+// We initialization the pool here to ensure it's ready. 
+try {
+    require("./database/db.js");
+} catch (dbError) {
+    console.error("CRITICAL: Failed to initialize database pool:", dbError);
+}
 
 // Routes
 // Simple route for testing
@@ -51,11 +55,22 @@ require("./routes/ai.routes.js")(app);
 
 app.use('/api/attendance', require("./routes/attendance.routes.js"));
 
+// Global Error Handler to prevent crashes on Vercel
+app.use((err, req, res, next) => {
+    console.error("Unhandled Error:", err.stack);
+    res.status(500).send({ 
+        message: "An internal server error occurred.",
+        error: process.env.NODE_ENV === 'production' ? {} : err.message 
+    });
+});
+
 // Start Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}.`);
+    });
+}
 
 // Export app for Vercel Serverless Functions
 module.exports = app;

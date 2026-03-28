@@ -1,7 +1,8 @@
 const { GoogleGenAI } = require('@google/genai');
 
-// We initialize the AI instance. It automatically picks up process.env.GEMINI_API_KEY if available.
-const ai = new GoogleGenAI({});
+// We initialize the AI instance with the API Key.
+// If missing on Vercel, it won't crash the server, but it will error when calling AI features.
+const ai = new GoogleGenAI(process.env.GEMINI_API_KEY || 'MISSING_API_KEY');
 
 exports.generateDashboardReport = async (req, res) => {
     try {
@@ -24,7 +25,7 @@ exports.generateDashboardReport = async (req, res) => {
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
         });
 
@@ -58,7 +59,7 @@ exports.generateStudentPlan = async (req, res) => {
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
         });
 
@@ -96,7 +97,7 @@ exports.chatWithData = async (req, res) => {
         `;
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: prompt,
         });
 

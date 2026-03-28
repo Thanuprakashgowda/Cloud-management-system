@@ -69,3 +69,10 @@ exports.delete = (req, res) => {
         res.send({ message: "Student deleted successfully!" });
     });
 };
+
+exports.deleteAll = (req, res) => {
+    sql.query("DELETE FROM students WHERE admin_id = ?", [req.adminId], (err, data) => {
+        if (err) return res.status(500).send({ message: err.message });
+        res.send({ message: `${data.affectedRows} Students deleted successfully!` });
+    });
+};
