@@ -1,4 +1,4 @@
-# ☁ Cloud SMS — AI-Powered School/College/University Management System
+# Cloud SMS — AI-Powered School/College/University Management System
 
 <div align="center">
 
@@ -11,74 +11,74 @@
 **A premium, enterprise-grade multi-tenant school management platform powered by Google Gemini AI.**  
 Manage students, courses, departments, academic results, and attendance — all from a stunning glassmorphism dashboard.
 
-[🚀 Live Demo](https://cloud-management-system-black.vercel.app) • [📂 GitHub Repo](https://github.com/Thanuprakashgowda/Cloud-management-system)
+[ Live Demo](https://cloud-management-system-black.vercel.app) • [ GitHub Repo](https://github.com/Thanuprakashgowda/Cloud-management-system)
 
 </div>
 
 ---
 
-## ✨ Features
+##  Features
 
-### 🔒 Enterprise Multi-Tenancy
+###  Enterprise Multi-Tenancy
 - **Data Isolation**: Secure separation of data per administrative account. Each institution (School, College, etc.) only sees and manages their own students, courses, and results using `admin_id` scoped queries.
 - **Premium Split-Screen Auth**: A modern, animated login/registration experience with branded feature highlights and animated background blobs.
 - **Institution Branding**: Support for various institution types (School, College, University, Academy, Institute).
 
-### 🤖 AI-Powered Intelligence
+### AI-Powered Intelligence
 | Feature | Description |
 |---|---|
 | **CloudBot Chatbot** | Floating AI assistant that answers natural language questions about live school data (e.g. *"How many students do we have?"*) |
 | **Executive Dashboard Report** | One-click AI-generated operational summary of the school's performance metrics |
 | **Student Action Planner** | Per-student AI strategy generator — click "Ask AI" on any result row to get a 3-point personalized academic improvement plan |
 
-### 📊 Dashboard & Analytics
+###  Dashboard & Analytics
 - **Live stat cards** for Total Students, Active Courses, and Departments — clickable to navigate to the relevant section.
 - **Enrollment Distribution Doughnut Chart** — color-coded by department with animated center label showing total students.
 - **Course Performance Bar Chart** — score-based color coding (🟢 Excellent ≥75, 🟡 Average 50-74, 🔴 Needs Improvement <50), staggered animation.
 - **Dark / Light Mode** with smooth transitions and deep space aurora gradient backgrounds.
 
-### 🎓 Student Management
+### Student Management
 - Full CRUD operations: Add, view, edit, and delete student records.
 - Fields: Name, Email, Date of Birth, Department assignment.
 - Export to **branded PDF** or **Excel (.xlsx)**.
 - **Pagination** support for handling large student datasets.
 
-### 📚 Course Management
+###  Course Management
 - Add and delete courses with credit hours and department linkage.
 - Data isolated per institution.
 - Export to PDF / Excel.
 
-### 🏫 Department Management
+###  Department Management
 - Add and delete departments with Head of Department tracking.
 - Automatically populates student and course dropdowns dynamically.
 
-### 📝 Academic Results
+###  Academic Results
 - **Add & Edit Results** — Select student + course from live dropdowns, set grade and marks.
 - **Inline Editing**: Ability to update existing grades and marks for any record.
 - View all results with **AI Insight** buttons per row.
 - Delete results (auto-removes linked enrollment records via cascade).
 - Export to PDF / Excel with AI insights included.
 
-### 📅 Attendance Tracking System (NEW)
+### Attendance Tracking System (NEW)
 - **Daily Entry**: Toggle Present, Absent, or Late status for all students on any date.
 - **Summary Analytics**: Real-time display of Present/Absent counts and Attendance Rate %.
 - **30-Day History**: Detailed history log with paginated records for historical tracking.
 - **Excel Export**: Export attendance sheets for any date to `.xlsx`.
 
-### 👤 Admin Profile System
+### Admin Profile System
 - Clickable admin panel in sidebar showing:
   - Institution name & avatar with initials.
   - Registered email and account creation date.
   - Live counts: total students, courses, departments.
   - Quick Sign-out.
 
-### 📄 PDF & Excel Export (Enterprise Quality)
+###  PDF & Excel Export (Enterprise Quality)
 - **Branded PDF**: A4 Landscape, school header, summary statistics, page numbers, and clean data rendering.
 - **Smart Excel**: Professional cell widths and formatted headers for all modules.
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -95,7 +95,7 @@ Manage students, courses, departments, academic results, and attendance — all 
 
 ---
 
-## 🚀 Live Deployment
+##  Live Deployment
 
 | Environment | URL |
 |---|---|
@@ -104,7 +104,7 @@ Manage students, courses, departments, academic results, and attendance — all 
 
 ---
 
-## ⚙️ Local Setup
+##  Local Setup
 
 ### Prerequisites
 - Node.js 18+
@@ -147,7 +147,7 @@ GEMINI_API_KEY=your-google-gemini-api-key
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 Cloud-management-system/
@@ -176,7 +176,7 @@ Cloud-management-system/
 
 ---
 
-## 📜 License
+##  License
 
 MIT License © 2026 [Thanuprakash Gowda](https://github.com/Thanuprakashgowda)
 
@@ -184,7 +184,7 @@ MIT License © 2026 [Thanuprakash Gowda](https://github.com/Thanuprakashgowda)
 
 <div align="center">
 
-Built with ❤️ by **[Thanuprakash Gowda](https://www.linkedin.com/in/thanuprakash-gowda)**  
+Built  by **[Thanuprakash Gowda](https://www.linkedin.com/in/thanuprakash-gowda)**  
 [GitHub](https://github.com/Thanuprakashgowda) · [LinkedIn](https://www.linkedin.com/in/thanuprakash-gowda)
 
 ![LinkedIn](https://img.shields.io/badge/LinkedIn-Thanuprakash%20Gowda-0A66C2?style=flat-square&logo=linkedin&logoColor=white)
