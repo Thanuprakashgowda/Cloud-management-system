@@ -7,7 +7,8 @@ USE student_management_system;
 CREATE TABLE IF NOT EXISTS departments (
     department_id INT PRIMARY KEY AUTO_INCREMENT,
     department_name VARCHAR(100) NOT NULL UNIQUE,
-    head_of_dept VARCHAR(100)
+    head_of_dept VARCHAR(100),
+    admin_id INT
 );
 
 -- 2. Courses Table
@@ -16,6 +17,7 @@ CREATE TABLE IF NOT EXISTS courses (
     course_name VARCHAR(100) NOT NULL,
     credits INT NOT NULL,
     department_id INT,
+    admin_id INT,
     FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL
 );
 
@@ -27,6 +29,7 @@ CREATE TABLE IF NOT EXISTS students (
     email VARCHAR(100) NOT NULL UNIQUE,
     dob DATE,
     department_id INT,
+    admin_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL
 );
@@ -56,6 +59,7 @@ CREATE TABLE IF NOT EXISTS marks (
 CREATE TABLE IF NOT EXISTS administrators (
     admin_id INT PRIMARY KEY AUTO_INCREMENT,
     school_name VARCHAR(100) NOT NULL,
+    institution_type VARCHAR(50) DEFAULT 'School',
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

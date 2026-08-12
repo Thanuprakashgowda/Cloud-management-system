@@ -22,13 +22,18 @@ if (dbConfig.HOST !== 'localhost' && dbConfig.HOST !== '127.0.0.1') {
 
 const pool = mysql.createPool(poolOptions);
 
-// Test the connection pool
+// Test the connection pool and run migrations
 pool.getConnection((error, connection) => {
     if (error) {
         console.error("DATA - Error connecting to the database: ", error);
     } else {
         console.log("DATA - Successfully connected to the database via pool.");
         connection.release();
+        try {
+            require("./initDb.js");
+        } catch (migErr) {
+            console.error("Migration initialization error:", migErr);
+        }
     }
 });
 
