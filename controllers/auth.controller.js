@@ -24,10 +24,25 @@ exports.register = async (req, res) => {
                 email,
                 password_hash
             };
-            sql.query("INSERT INTO administrators SET ?", admin, (err, data) => {
-                if (err) return res.status(500).send({ message: err.message });
-                res.status(201).send({ message: `${institution_type || 'Institution'} Registered Successfully!` });
-            });
+
+            const performInsert = () => {
+                sql.query("INSERT INTO administrators SET ?", admin, (err, data) => {
+                    if (err) {
+                        if (err.message && err.message.toLowerCase().includes("institution_type")) {
+                            return sql.query("ALTER TABLE administrators ADD COLUMN institution_type VARCHAR(50) DEFAULT 'School'", (alterErr) => {
+                                sql.query("INSERT INTO administrators SET ?", admin, (retryErr) => {
+                                    if (retryErr) return res.status(500).send({ message: retryErr.message });
+                                    res.status(201).send({ message: `${institution_type || 'Institution'} Registered Successfully!` });
+                                });
+                            });
+                        }
+                        return res.status(500).send({ message: err.message });
+                    }
+                    res.status(201).send({ message: `${institution_type || 'Institution'} Registered Successfully!` });
+                });
+            };
+
+            performInsert();
         });
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -69,7 +84,17 @@ exports.login = (req, res) => {
 exports.getProfile = (req, res) => {
     const query = "SELECT school_name, institution_type, email, created_at FROM administrators WHERE admin_id = ?";
     sql.query(query, [req.adminId], (err, result) => {
-        if (err) return res.status(500).send({ message: err.message });
+        if (err) {
+            if (err.message && err.message.toLowerCase().includes("institution_type")) {
+                const fallbackQ = "SELECT school_name, 'School' AS institution_type, email, created_at FROM administrators WHERE admin_id = ?";
+                return sql.query(fallbackQ, [req.adminId], (err2, res2) => {
+                    if (err2) return res.status(500).send({ message: err2.message });
+                    if (!res2.length) return res.status(404).send({ message: "Admin not found." });
+                    res.status(200).send(res2[0]);
+                });
+            }
+            return res.status(500).send({ message: err.message });
+        }
         if (!result.length) return res.status(404).send({ message: "Admin not found." });
         res.status(200).send(result[0]);
     });

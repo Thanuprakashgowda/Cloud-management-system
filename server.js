@@ -19,6 +19,7 @@ app.use(express.static('public'));
 // We initialization the pool here to ensure it's ready. 
 try {
     require("./database/db.js");
+    require("./database/initDb.js");
 } catch (dbError) {
     console.error("CRITICAL: Failed to initialize database pool:", dbError);
 }
