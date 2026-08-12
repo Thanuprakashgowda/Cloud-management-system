@@ -1,8 +1,9 @@
 const { GoogleGenAI } = require('@google/genai');
 
+const getApiKey = () => process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
 // We initialize the AI instance with the API Key.
-// If missing on Vercel, it won't crash the server, but it will error when calling AI features.
-const ai = new GoogleGenAI(process.env.GEMINI_API_KEY || 'MISSING_API_KEY');
+const getAiInstance = () => new GoogleGenAI(getApiKey() || 'MISSING_API_KEY');
 
 exports.generateDashboardReport = async (req, res) => {
     try {
@@ -12,7 +13,8 @@ exports.generateDashboardReport = async (req, res) => {
             return res.status(400).send({ message: "Dashboard statistics are required for the AI report." });
         }
 
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+        const apiKey = getApiKey();
+        if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
             return res.status(500).send({ message: "GEMINI_API_KEY is missing or invalid. Please configure it in Vercel to use AI features!" });
         }
 
@@ -24,8 +26,9 @@ exports.generateDashboardReport = async (req, res) => {
         Write a concise, 1-paragraph Executive Analytics Report focusing on how the school is generally performing based on average marks and department enrollment distribution. Keep it highly professional but easy to read.
         `;
 
+        const ai = getAiInstance();
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             contents: prompt,
         });
 
@@ -44,7 +47,8 @@ exports.generateStudentPlan = async (req, res) => {
              return res.status(400).send({ message: "Student details and marks are required for the Action Plan." });
         }
 
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+        const apiKey = getApiKey();
+        if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
             return res.status(500).send({ message: "GEMINI_API_KEY is missing or invalid. Please configure it in Vercel to use AI features!" });
         }
 
@@ -58,8 +62,9 @@ exports.generateStudentPlan = async (req, res) => {
         Keep each bullet strictly to 1 sentence. Do not include any other text besides the 3 bullets.
         `;
 
+        const ai = getAiInstance();
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             contents: prompt,
         });
 
@@ -79,8 +84,9 @@ exports.chatWithData = async (req, res) => {
              return res.status(400).send({ message: "A question is required." });
         }
 
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-            return res.status(500).send({ message: "GEMINI_API_KEY is missing. Please configure it in Vercel to use the Chatbot!" });
+        const apiKey = getApiKey();
+        if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
+            return res.status(500).send({ message: "GEMINI_API_KEY is missing. Please configure it in Vercel environment variables to use CloudBot Chatbot!" });
         }
 
         const prompt = `
@@ -96,8 +102,9 @@ exports.chatWithData = async (req, res) => {
         Keep your response conversational, extremely concise (2-3 sentences max), and professional. Do not use markdown like bolding or lists, just plain text. If the answer cannot be found in the context, say "I don't have enough data to see that right now."
         `;
 
+        const ai = getAiInstance();
         const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             contents: prompt,
         });
 
